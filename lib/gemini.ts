@@ -1,10 +1,6 @@
-import { GoogleGenerativeAI } from '@google/generative-ai'
+const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY
 
-const API_KEY = process.env.GEMINI_API_KEY
-
-if (!API_KEY) console.warn('[gemini] GEMINI_API_KEY no está definido (modo demo)')
-
-const client = new GoogleGenerativeAI({ apiKey: API_KEY || 'demo' })
+if (!OPENROUTER_API_KEY) console.warn('[gemini] OPENROUTER_API_KEY no está definido (modo demo)')
 
 export async function generateLook({
   modelUrls,
@@ -12,51 +8,101 @@ export async function generateLook({
   variants = 2
 }: { modelUrls: string[], garmentUrls: string[], variants?: number }): Promise<string[]> {
   // Si no hay API_KEY, devolvemos imágenes "eco" (echo) para demo
-  if (!API_KEY) {
+  if (!OPENROUTER_API_KEY) {
     return garmentUrls.slice(0, variants).map((g, i) => g)
   }
 
-  const toInline = (dataUrl: string) => {
-    // admite data:URL o URL remota (en prod descarga binario)
-    if (dataUrl.startsWith('data:')) {
-      const [head, b64] = dataUrl.split(',', 2)
-      const mime = head.split(':')[1].split(';')[0]
-      return { inlineData: { mimeType: mime, data: b64 } }
+  // Preparar el contenido del mensaje
+  const content = [
+    {
+      type: "text",
+      text: `Create a photorealistic virtual try-on image. Take the person from the first image and put the clothing items shown in the garment images on them. 
+IMPORTANT: Generate ${variants} actual images, not descriptions. 
+Requirements:
+- Keep the person's face, hair, and skin tone exactly the same
+- Fit the garments naturally on the person's body
+- Maintain proper lighting and perspective
+- Use neutral background
+- Generate actual images, not text descriptions`
     }
-    // simple: referencia remota
-    return { fileData: { mimeType: 'image/png', fileUri: dataUrl } as any }
-  }
-
-  const parts: any[] = [
-    { text:
-`You are a fashion virtual try-on editor.
-- Keep the PERSON's face and hair identical.
-- Fit the DRESS naturally to the body (fabric folds, neckline alignment).
-- Add extra garments (shoes/bag) matching perspective.
-- Photorealistic, studio soft light, neutral background.
-Return ${variants} images.` }
   ]
 
-  for (const m of modelUrls) parts.push(toInline(m))
-  for (const g of garmentUrls) { parts.push({ text: 'GARMENT:' }); parts.push(toInline(g)) }
-
-  const model = client.getGenerativeModel({ 
-    model: 'gemini-2.5-flash-image-preview',
-    generationConfig: {
-      response_modalities: ['IMAGE', 'TEXT']
-    }
-  })
-  
-  const res = await model.generateContent({
-    contents: [{ role: 'user', parts }]
-  })
-
-  const outs: string[] = []
-  for (const cand of res.candidates ?? []) {
-    for (const part of (cand.content?.parts ?? [])) {
-      const data = (part as any)?.inlineData?.data
-      if (data) outs.push(`data:image/png;base64,${data}`)
-    }
+  // Agregar imágenes del modelo
+  for (const modelUrl of modelUrls) {
+    content.push({
+      type: "image_url",
+      image_url: {
+        url: modelUrl
+      }
+    })
   }
-  return outs
+
+  // Agregar prendas
+  for (const garmentUrl of garmentUrls) {
+    content.push({
+      type: "text", 
+      text: "GARMENT:"
+    })
+    content.push({
+      type: "image_url",
+      image_url: {
+        url: garmentUrl
+      }
+    })
+  }
+
+  try {
+    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
+        "HTTP-Referer": "http://localhost:3001",
+        "X-Title": "AI Look Try-On",
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        model: "google/gemini-2.5-flash-image-preview",
+        messages: [
+          {
+            role: "user",
+            content: content
+          }
+        ]
+      })
+    })
+
+    if (!response.ok) {
+      throw new Error(`OpenRouter API error: ${response.status} ${response.statusText}`)
+    }
+
+    const result = await response.json()
+    
+    console.log('OpenRouter full response:', JSON.stringify(result, null, 2))
+    
+    // Procesar la respuesta - OpenRouter devuelve imágenes en el campo "images"
+    const outputs: string[] = []
+    
+    if (result.choices && result.choices[0]?.message) {
+      const message = result.choices[0].message
+      
+      // Verificar si hay imágenes generadas
+      if (message.images && Array.isArray(message.images)) {
+        for (const imageObj of message.images) {
+          if (imageObj.type === 'image_url' && imageObj.image_url?.url) {
+            outputs.push(imageObj.image_url.url)
+          }
+        }
+        console.log(`Generated ${outputs.length} images from OpenRouter`)
+      } else {
+        console.log('No images found in response, content:', message.content)
+      }
+    }
+
+    return outputs.length > 0 ? outputs : garmentUrls.slice(0, variants)
+    
+  } catch (error) {
+    console.error('Error with OpenRouter API:', error)
+    // Fallback a modo demo
+    return garmentUrls.slice(0, variants)
+  }
 }
