@@ -40,7 +40,12 @@ Return ${variants} images.` }
   for (const m of modelUrls) parts.push(toInline(m))
   for (const g of garmentUrls) { parts.push({ text: 'GARMENT:' }); parts.push(toInline(g)) }
 
-  const model = client.getGenerativeModel({ model: 'gemini-2.5-flash' })
+  const model = client.getGenerativeModel({ 
+    model: 'gemini-2.5-flash-image-preview',
+    generationConfig: {
+      response_modalities: ['IMAGE', 'TEXT']
+    }
+  })
   
   const res = await model.generateContent({
     contents: [{ role: 'user', parts }]
