@@ -20,23 +20,34 @@ export async function GET(req: Request) {
       const tableName = type === 'model' ? 'models' : 'garments'
       const { data, error } = await supabase
         .from(tableName)
-        .select('image_url')
+        .select('id, image_url, created_at, category')
         .order('created_at', { ascending: false })
       
       if (error) {
         console.error('Error fetching from Supabase:', error)
-        return Response.json({ urls: memory[type] || [] })
+        const urls = memory[type] || []
+        const items = urls.map((url, index) => ({ id: `demo-${index}`, url, created_at: new Date().toISOString() }))
+        return Response.json({ items })
       }
       
-      const urls = data?.map(item => item.image_url) || []
-      return Response.json({ urls })
+      const items = data?.map(item => ({
+        id: item.id,
+        url: item.image_url,
+        created_at: item.created_at,
+        category: item.category
+      })) || []
+      return Response.json({ items })
     } catch (err) {
       console.error('Error in Supabase GET:', err)
-      return Response.json({ urls: memory[type] || [] })
+      const urls = memory[type] || []
+      const items = urls.map((url, index) => ({ id: `demo-${index}`, url, created_at: new Date().toISOString() }))
+      return Response.json({ items })
     }
   } else {
     // Modo demo
-    return Response.json({ urls: memory[type] || [] })
+    const urls = memory[type] || []
+    const items = urls.map((url, index) => ({ id: `demo-${index}`, url, created_at: new Date().toISOString() }))
+    return Response.json({ items })
   }
 }
 

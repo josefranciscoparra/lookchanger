@@ -4,6 +4,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **IMPORTANTE**: El usuario prefiere recibir todas las respuestas en castellano/español.
 
+**IMPORTANTE**: Cuando hagas consultas a la base de datos o devuelvas información sobre imágenes, NO incluyas los datos completos de las imágenes (como URLs data: o contenido binario) ya que supera el límite de contexto. Solo devuelve nombres de archivos, IDs o metadatos básicos.
+
 ## Project Overview
 
 This is an AI-powered virtual try-on application built with Next.js 14 that allows users to generate photos of models wearing different clothing items using Google's Gemini 2.5 Flash Image model. The app enables users to upload model photos, garment images, and create outfit combinations through AI generation.
@@ -12,6 +14,7 @@ This is an AI-powered virtual try-on application built with Next.js 14 that allo
 
 ### Core Stack
 - **Frontend**: Next.js 14 (App Router) + TypeScript + Tailwind CSS
+- **State Management**: Zustand for global state persistence
 - **AI Integration**: Google Gemini 2.5 Flash Image (`@google/generative-ai` package)
 - **Storage**: Supabase (optional, fallback to in-memory/demo mode)
 - **Database**: PostgreSQL via Supabase with 4 main tables
@@ -32,6 +35,37 @@ This is an AI-powered virtual try-on application built with Next.js 14 that allo
 **Core Libraries:**
 - `lib/gemini.ts` - Handles Gemini AI integration and prompt engineering
 - `lib/storage.ts` - Manages file storage (demo mode with data URLs)
+- `lib/store.ts` - Zustand global state store for models and garments
+
+### State Management with Zustand
+
+The application uses Zustand for global state management to ensure data persistence across page navigations:
+
+**Store Structure (`lib/store.ts`):**
+- `models: Model[]` - Array of uploaded model photos
+- `garments: Garment[]` - Array of uploaded garment images  
+- `isLoading: boolean` - Global loading state
+- `isInitialized: boolean` - Whether store has loaded initial data
+
+**Key Actions:**
+- `initialize()` - Loads models and garments from API on app start
+- `addModels()` / `addGarments()` - Add new items after upload
+- `removeModel()` / `removeGarment()` - Remove items from store
+- `loadModelsFromApi()` / `loadGarmentsFromApi()` - Sync with Supabase
+
+**Usage Pattern:**
+```typescript
+const { models, garments, addModels, initialize } = useAppStore()
+
+useEffect(() => {
+  initialize() // Load existing data on component mount
+}, [initialize])
+```
+
+**Data Flow:**
+1. User uploads files → API saves to Supabase → Store updates
+2. Page navigation → Store persists data using Zustand persistence middleware
+3. App restart → Store loads from localStorage + API sync
 
 ### Database Schema (Supabase)
 
@@ -105,6 +139,7 @@ SUPABASE_SERVICE_ROLE=your_supabase_service_role_key
 ## Development Notes
 
 - The app is designed for rapid iteration and can work completely offline in demo mode
+- **State persists across page navigations** thanks to Zustand global store
 - No authentication required by default (can be added via Supabase Auth)
 - UI is in Spanish (`lang="es"` in layout)
 - Uses simple file-based storage in demo mode for quick testing
@@ -116,4 +151,5 @@ When working on this codebase:
 - Test both demo mode (no env vars) and full Supabase integration
 - Verify AI generation with different model/garment combinations
 - Ensure file uploads work in both storage modes
+- **Always use Zustand store** (`useAppStore`) for managing models and garments instead of local state
 - Check prompt engineering in `lib/gemini.ts` for quality improvements

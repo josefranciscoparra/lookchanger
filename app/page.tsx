@@ -1,20 +1,41 @@
 import Link from 'next/link'
-import { ArrowRight, Sparkles, User, Shirt, Wand2 } from 'lucide-react'
+import { ArrowRight, Sparkles, User, Shirt, Wand2, Zap, Star, Heart } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
 
 export default function Page() {
   return (
     <div className="space-y-8">
       {/* Hero Section */}
-      <div className="text-center space-y-4">
-        <div className="flex items-center justify-center gap-2 mb-6">
-          <Sparkles className="h-12 w-12 text-primary" />
-          <h1 className="text-4xl font-bold">AI Look Try-On</h1>
+      <div className="text-center space-y-6">
+        <div className="space-y-4">
+          <Badge className="mx-auto" variant="secondary">
+            <Zap className="h-3 w-3 mr-1" />
+            Potenciado por IA
+          </Badge>
+          <h1 className="text-5xl font-bold bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">
+            LookChanger
+          </h1>
+          <p className="text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
+            Transforma tu estilo con inteligencia artificial. Pruébate ropa virtualmente 
+            y descubre looks únicos en segundos.
+          </p>
         </div>
-        <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-          Genera looks fotorrealistas combinando modelos y prendas usando inteligencia artificial avanzada
-        </p>
+        
+        <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <Button asChild size="lg" className="text-lg px-8">
+            <Link href="/outfits">
+              <Sparkles className="mr-2 h-5 w-5" />
+              Empezar Ahora
+            </Link>
+          </Button>
+          <Button asChild variant="outline" size="lg" className="text-lg px-8">
+            <Link href="/models">
+              Explorar Modelos
+            </Link>
+          </Button>
+        </div>
       </div>
 
       {/* Features Grid */}
