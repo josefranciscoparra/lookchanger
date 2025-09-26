@@ -21,7 +21,10 @@ export async function generateLook({
     fullBodyVisible: true,
     showShoes: true,
     hideHatsAndCaps: true,
-    adaptShoesToLook: true
+    adaptShoesToLook: true,
+    removeSunglasses: false,
+    onlySelectedGarments: false,
+    photoStyle: 'original'
   }
 }: { 
   modelUrls: string[], 
@@ -34,7 +37,10 @@ export async function generateLook({
     fullBodyVisible: boolean,
     showShoes: boolean,
     hideHatsAndCaps: boolean,
-    adaptShoesToLook: boolean
+    adaptShoesToLook: boolean,
+    removeSunglasses: boolean,
+    onlySelectedGarments: boolean,
+    photoStyle: 'original' | 'studio' | 'outdoor' | 'casual' | 'professional'
   }
 }): Promise<string[]> {
   // Si no hay API_KEY, devolvemos imágenes "eco" (echo) para demo
@@ -51,14 +57,16 @@ CORE REQUIREMENTS (apply to ALL variants):
 - The person should ONLY wear the new garments (remove original clothes)  
 - Keep the person's face, hair, and body shape exactly the same
 - Fit the garments naturally on the person's body
-- For dresses: remove any pants, shirts or conflicting items
-- For tops: keep bottom clothing if no bottom garment provided
+- ${outfitOptions.onlySelectedGarments ? 'CRITICAL: Remove ALL original clothing. The person must wear ONLY the garments provided below. Do not keep any pants, shirts, dresses, or any clothing from the original image' : 'For dresses: remove any pants, shirts or conflicting items. For tops: keep bottom clothing if no bottom garment provided'}
+- IMPORTANT: Always include appropriate footwear unless specifically instructed otherwise
 
 ADDITIONAL OUTFIT OPTIONS:
 - Body framing: ${outfitOptions.fullBodyVisible ? 'Show the complete figure from head to toe in full body view' : 'Focus on upper body/torso area'}
-- Footwear: ${outfitOptions.showShoes ? 'Include appropriate footwear in the image' : 'Crop image to exclude feet/shoes'}
+- Footwear requirement: ${outfitOptions.showShoes ? 'MUST include appropriate shoes/footwear in the image. The person should NOT be barefoot' : 'Crop image to exclude feet/shoes'}
 - Head accessories: ${outfitOptions.hideHatsAndCaps ? 'Do NOT add hats, caps, beanies or any head coverings' : 'Head accessories are allowed if they complement the outfit'}
-- Shoe coordination: ${outfitOptions.adaptShoesToLook ? 'Choose footwear that matches and complements the outfit style and colors' : 'Use neutral/basic footwear'}`
+- Shoe styling: ${outfitOptions.adaptShoesToLook ? 'Choose stylish footwear that perfectly matches and complements the outfit colors, style and occasion. Ensure shoes are clearly visible and well-coordinated' : 'Use simple, neutral footwear (sneakers, basic flats, or similar)'}
+- Sunglasses policy: ${outfitOptions.removeSunglasses ? 'Remove any sunglasses from the person - the eyes should be visible and clear' : 'Keep sunglasses only if the original model is wearing them, otherwise do NOT add sunglasses'}
+- Clothing replacement: ${outfitOptions.onlySelectedGarments ? 'STRICT MODE: Remove every piece of clothing from the original image and dress the person exclusively with the provided garments' : 'Standard replacement with smart clothing coordination'}`
 
   // Generar instrucciones específicas para cada variante
   if (variants > 1 && variantConfigs.length > 0) {

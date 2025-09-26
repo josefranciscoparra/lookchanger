@@ -10,9 +10,16 @@ export async function POST(req: NextRequest) {
   try {
     const form = await req.formData()
     const files = form.getAll('files').filter(x => x instanceof File) as File[]
+    const categories = form.getAll('categories') as string[]
     
     if (!files.length) {
       return NextResponse.json({ error: 'No se han seleccionado archivos' }, { status: 400 })
+    }
+    
+    // Validar que cada archivo tenga una categoría (para prendas)
+    const type = req.nextUrl.searchParams.get('type')
+    if (type === 'garment' && categories.length !== files.length) {
+      return NextResponse.json({ error: 'Cada prenda debe tener una categoría asignada' }, { status: 400 })
     }
 
     // Validar archivos
@@ -38,7 +45,8 @@ export async function POST(req: NextRequest) {
       headers: { 'Content-Type': 'application/json' }, 
       body: JSON.stringify({ 
         type: req.nextUrl.searchParams.get('type') || 'model', 
-        urls 
+        urls,
+        categories: type === 'garment' ? categories : undefined
       }) 
     })
     

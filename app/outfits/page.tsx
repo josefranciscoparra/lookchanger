@@ -97,7 +97,9 @@ export default function OutfitsPage() {
     fullBodyVisible: true,
     showShoes: true,
     hideHatsAndCaps: true,
-    adaptShoesToLook: true
+    adaptShoesToLook: true,
+    removeSunglasses: false,
+    onlySelectedGarments: false
   })
   
   // UI states
@@ -393,7 +395,9 @@ export default function OutfitsPage() {
       fullBodyVisible: true,
       showShoes: true,
       hideHatsAndCaps: true,
-      adaptShoesToLook: true
+      adaptShoesToLook: true,
+      removeSunglasses: false,
+      onlySelectedGarments: false
     })
     setOutputs([])
     setError('')
@@ -785,6 +789,32 @@ export default function OutfitsPage() {
                       }
                     />
                   </div>
+                  
+                  <div className="flex items-center justify-between gap-3 rounded-xl border border-primary/15 bg-white/80 px-4 py-3">
+                    <div className="space-y-0.5">
+                      <label className="text-sm font-medium text-foreground/90">Quitar gafas de sol</label>
+                      <p className="text-xs text-muted-foreground">Eliminar gafas de sol del modelo</p>
+                    </div>
+                    <Switch
+                      checked={outfitOptions.removeSunglasses}
+                      onCheckedChange={(checked) => 
+                        setOutfitOptions(prev => ({...prev, removeSunglasses: checked}))
+                      }
+                    />
+                  </div>
+                  
+                  <div className="flex items-center justify-between gap-3 rounded-xl border border-primary/15 bg-white/80 px-4 py-3">
+                    <div className="space-y-0.5">
+                      <label className="text-sm font-medium text-foreground/90">Solo prendas seleccionadas</label>
+                      <p className="text-xs text-muted-foreground">Quitar toda la ropa original del modelo</p>
+                    </div>
+                    <Switch
+                      checked={outfitOptions.onlySelectedGarments}
+                      onCheckedChange={(checked) => 
+                        setOutfitOptions(prev => ({...prev, onlySelectedGarments: checked}))
+                      }
+                    />
+                  </div>
                 </div>
               </div>
             </div>
@@ -806,6 +836,8 @@ export default function OutfitsPage() {
                       <p>• Vista: {outfitOptions.fullBodyVisible ? 'Cuerpo completo' : 'Vista parcial'}</p>
                       <p>• Calzado: {outfitOptions.showShoes ? 'Incluido' : 'Oculto'}{outfitOptions.adaptShoesToLook ? ' y adaptado' : ''}</p>
                       <p>• Accesorios: {outfitOptions.hideHatsAndCaps ? 'Sin gorros/gorras' : 'Todos permitidos'}</p>
+                      <p>• Gafas de sol: {outfitOptions.removeSunglasses ? 'Eliminadas' : 'Solo si las lleva el modelo'}</p>
+                      <p>• Reemplazo de ropa: {outfitOptions.onlySelectedGarments ? 'Solo prendas seleccionadas' : 'Coordinación inteligente'}</p>
                       {variants > 1 && variantConfigs.length > 0 && (
                         <div className="ml-4 space-y-0.5 text-xs">
                           {variantConfigs.map(config => (

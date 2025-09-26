@@ -7,10 +7,12 @@ export interface Model {
   created_at?: string
 }
 
+export type GarmentCategory = 'tops' | 'bottoms' | 'vestidos' | 'calzado' | 'abrigos' | 'accesorios'
+
 export interface Garment {
   id?: string
   url: string
-  category?: string
+  category: GarmentCategory
   created_at?: string
 }
 
@@ -31,6 +33,8 @@ interface AppState {
   setGarments: (garments: Garment[]) => void
   addGarments: (garments: Garment[]) => void
   removeGarment: (index: number) => void
+  updateGarmentCategory: (index: number, category: GarmentCategory) => void
+  getGarmentsByCategory: () => Record<GarmentCategory, Garment[]>
   loadGarmentsFromApi: () => Promise<void>
   
   // Acciones generales
@@ -89,6 +93,21 @@ export const useAppStore = create<AppState>()(
       removeGarment: (index) => set((state) => ({
         garments: state.garments.filter((_, i) => i !== index)
       })),
+      
+      updateGarmentCategory: (index, category) => set((state) => ({
+        garments: state.garments.map((garment, i) => 
+          i === index ? { ...garment, category } : garment
+        )
+      })),
+      
+      getGarmentsByCategory: () => {
+        const { garments } = get()
+        const categories: GarmentCategory[] = ['tops', 'bottoms', 'vestidos', 'calzado', 'abrigos', 'accesorios']
+        return categories.reduce((acc, category) => {
+          acc[category] = garments.filter(garment => garment.category === category)
+          return acc
+        }, {} as Record<GarmentCategory, Garment[]>)
+      },
       
       loadGarmentsFromApi: async () => {
         try {

@@ -1,7 +1,7 @@
 'use client'
 import { useState, useCallback, useEffect } from 'react'
-import { useAppStore } from '@/lib/store'
-import { Upload, X, Shirt, Plus, Package, Sparkles, Info, Tag } from 'lucide-react'
+import { useAppStore, type GarmentCategory } from '@/lib/store'
+import { Upload, X, Shirt, Plus, Package, Sparkles, Info, Tag, Palette } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Alert, AlertDescription } from '@/components/ui/alert'
@@ -10,9 +10,19 @@ import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+
+interface FileWithCategory {
+  file: File
+  category: GarmentCategory | null
+}
 
 export default function GarmentsPage() {
   const [files, setFiles] = useState<File[]>([])
+  const [fileCategories, setFileCategories] = useState<{ [key: string]: GarmentCategory | null }>({})
+  const [showCategoryDialog, setShowCategoryDialog] = useState(false)
   const [uploadLoading, setUploadLoading] = useState(false)
   
   // Usar Zustand store
@@ -21,6 +31,7 @@ export default function GarmentsPage() {
     isLoading, 
     addGarments, 
     removeGarment, 
+    getGarmentsByCategory,
     initialize 
   } = useAppStore()
   const [error, setError] = useState<string>('')
@@ -33,9 +44,22 @@ export default function GarmentsPage() {
     initialize()
   }, [])
 
+  const validateCategories = () => {
+    return files.every(file => {
+      const category = fileCategories[file.name]
+      return category !== null && category !== undefined
+    })
+  }
+
   const onUpload = useCallback(async () => {
     if (!files.length) {
       setError('Selecciona al menos un archivo')
+      return
+    }
+
+    if (!validateCategories()) {
+      setError('Asigna una categoría a cada prenda antes de subir')
+      setShowCategoryDialog(true)
       return
     }
 
@@ -47,6 +71,14 @@ export default function GarmentsPage() {
     try {
       const body = new FormData()
       files.forEach(f => body.append('files', f))
+      
+      // Añadir categorías
+      files.forEach(file => {
+        const category = fileCategories[file.name]
+        if (category) {
+          body.append('categories', category)
+        }
+      })
       
       // Simular progreso
       const progressInterval = setInterval(() => {
@@ -63,12 +95,16 @@ export default function GarmentsPage() {
         throw new Error(json.error || 'Error al subir archivos')
       }
       
-      // Añadir prendas al store
+      // Añadir prendas al store con categorías
       if (json.urls && json.urls.length > 0) {
-        const newGarments = json.urls.map((url: string) => ({ url }))
+        const newGarments = json.urls.map((url: string, index: number) => ({
+          url,
+          category: fileCategories[files[index].name] as GarmentCategory
+        }))
         addGarments(newGarments)
       }
       setFiles([])
+      setFileCategories({})
       setSuccess(`${json.urls?.length || 0} prenda(s) añadida(s) a tu colección`)
       
       // Limpiar el input
@@ -86,7 +122,7 @@ export default function GarmentsPage() {
     } finally {
       setUploadLoading(false)
     }
-  }, [files])
+  }, [files, fileCategories, addGarments])
 
   const removeImage = useCallback((index: number) => {
     removeGarment(index)
@@ -122,17 +158,43 @@ export default function GarmentsPage() {
 
   const handleFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
-      setFiles(Array.from(e.target.files))
+      const newFiles = Array.from(e.target.files)
+      setFiles(newFiles)
+      // Si solo hay un archivo, mostrar el diálogo de categoría
+      if (newFiles.length === 1) {
+        setShowCategoryDialog(true)
+      } else if (newFiles.length > 1) {
+        // Para múltiples archivos, mostrar el diálogo
+        setShowCategoryDialog(true)
+      }
     }
   }, [])
 
-  const garmentCategories = [
-    { name: 'Tops', count: 0, color: 'bg-red-100 text-red-700' },
-    { name: 'Pantalones', count: 0, color: 'bg-blue-100 text-blue-700' },
-    { name: 'Vestidos', count: 0, color: 'bg-purple-100 text-purple-700' },
-    { name: 'Calzado', count: 0, color: 'bg-green-100 text-green-700' },
-    { name: 'Accesorios', count: 0, color: 'bg-orange-100 text-orange-700' },
-  ]
+  const setCategoryForFile = (fileName: string, category: GarmentCategory) => {
+    setFileCategories(prev => ({
+      ...prev,
+      [fileName]: category
+    }))
+  }
+
+  const categoryInfo = {
+    tops: { name: 'Tops', icon: '👕', color: 'bg-red-100 text-red-700', description: 'Camisetas, camisas, blusas' },
+    bottoms: { name: 'Pantalones', icon: '👖', color: 'bg-blue-100 text-blue-700', description: 'Pantalones, faldas, shorts' },
+    vestidos: { name: 'Vestidos', icon: '👗', color: 'bg-purple-100 text-purple-700', description: 'Vestidos y monos' },
+    calzado: { name: 'Calzado', icon: '👞', color: 'bg-green-100 text-green-700', description: 'Zapatos, botas, sandalias' },
+    abrigos: { name: 'Abrigos', icon: '🧥', color: 'bg-indigo-100 text-indigo-700', description: 'Chaquetas, abrigos, blazers' },
+    accesorios: { name: 'Accesorios', icon: '👜', color: 'bg-orange-100 text-orange-700', description: 'Bolsos, cinturones, joyas' },
+  }
+
+  const garmentsByCategory = getGarmentsByCategory()
+  const garmentCategories = Object.entries(categoryInfo).map(([key, info]) => ({
+    key: key as GarmentCategory,
+    name: info.name,
+    icon: info.icon,
+    count: garmentsByCategory[key as GarmentCategory]?.length || 0,
+    color: info.color,
+    description: info.description
+  }))
 
   return (
     <TooltipProvider>
@@ -160,14 +222,16 @@ export default function GarmentsPage() {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
           {garmentCategories.map((category) => (
-            <Card key={category.name} className="text-center hover:shadow-md transition-shadow">
+            <Card key={category.key} className="text-center hover:shadow-md transition-shadow">
               <CardContent className="pt-4 pb-4">
+                <div className="text-2xl mb-2">{category.icon}</div>
                 <div className={`inline-flex px-2 py-1 rounded-full text-xs font-medium mb-2 ${category.color}`}>
                   {category.name}
                 </div>
                 <p className="text-2xl font-bold">{category.count}</p>
+                <p className="text-xs text-muted-foreground mt-1">{category.description}</p>
               </CardContent>
             </Card>
           ))}
@@ -275,26 +339,53 @@ export default function GarmentsPage() {
               </div>
             </CardHeader>
             <CardContent className="space-y-3">
-              {files.map((file, i) => (
-                <div key={i} className="flex items-center gap-3 p-3 bg-muted/30 rounded-lg">
-                  <div className="p-2 bg-green-100 rounded">
-                    <Package className="h-4 w-4 text-green-600" />
+              {files.map((file, i) => {
+                const category = fileCategories[file.name]
+                const categoryData = category ? categoryInfo[category] : null
+                
+                return (
+                  <div key={i} className="flex items-center gap-3 p-3 bg-muted/30 rounded-lg">
+                    <div className="p-2 bg-green-100 rounded">
+                      {categoryData ? (
+                        <span className="text-lg">{categoryData.icon}</span>
+                      ) : (
+                        <Package className="h-4 w-4 text-green-600" />
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium truncate">{file.name}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {(file.size / 1024 / 1024).toFixed(1)} MB
+                        {categoryData && (
+                          <span className={`ml-2 px-2 py-1 rounded-full text-xs ${categoryData.color}`}>
+                            {categoryData.name}
+                          </span>
+                        )}
+                      </p>
+                    </div>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => setFiles(prev => prev.filter((_, idx) => idx !== i))}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium truncate">{file.name}</p>
-                    <p className="text-sm text-muted-foreground">
-                      {(file.size / 1024 / 1024).toFixed(1)} MB
-                    </p>
-                  </div>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={() => setFiles(prev => prev.filter((_, idx) => idx !== i))}
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
-                </div>
-              ))}
+                )
+              })}
+              
+              {!validateCategories() && (
+                <Alert>
+                  <Info className="h-4 w-4" />
+                  <AlertDescription className="flex items-center justify-between">
+                    <span>Asigna una categoría a cada prenda para continuar</span>
+                    <Button variant="outline" size="sm" onClick={() => setShowCategoryDialog(true)}>
+                      <Palette className="mr-2 h-4 w-4" />
+                      Categorizar
+                    </Button>
+                  </AlertDescription>
+                </Alert>
+              )}
               
               {uploadLoading && uploadProgress > 0 && (
                 <div className="space-y-2">
@@ -308,7 +399,7 @@ export default function GarmentsPage() {
               
               <Button 
                 onClick={onUpload}
-                disabled={uploadLoading || isLoading}
+                disabled={uploadLoading || isLoading || !validateCategories()}
                 className="w-full"
                 size="lg"
               >
@@ -328,6 +419,66 @@ export default function GarmentsPage() {
           </Card>
         )}
 
+        {/* Category Dialog */}
+        <Dialog open={showCategoryDialog} onOpenChange={setShowCategoryDialog}>
+          <DialogContent className="sm:max-w-2xl">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Palette className="h-5 w-5" />
+                Categorizar Prendas
+              </DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 max-h-96 overflow-y-auto">
+              {files.map((file, i) => {
+                const currentCategory = fileCategories[file.name]
+                
+                return (
+                  <div key={i} className="flex items-center gap-3 p-3 border rounded-lg">
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium truncate">{file.name}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {(file.size / 1024 / 1024).toFixed(1)} MB
+                      </p>
+                    </div>
+                    <Select 
+                      value={currentCategory || ''} 
+                      onValueChange={(value) => setCategoryForFile(file.name, value as GarmentCategory)}
+                    >
+                      <SelectTrigger className="w-48">
+                        <SelectValue placeholder="Seleccionar categoría" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {Object.entries(categoryInfo).map(([key, info]) => (
+                          <SelectItem key={key} value={key}>
+                            <div className="flex items-center gap-2">
+                              <span>{info.icon}</span>
+                              <span>{info.name}</span>
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )
+              })}
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button
+                variant="outline"
+                onClick={() => setShowCategoryDialog(false)}
+              >
+                Cerrar
+              </Button>
+              {validateCategories() && (
+                <Button onClick={() => setShowCategoryDialog(false)}>
+                  <Sparkles className="mr-2 h-4 w-4" />
+                  Continuar
+                </Button>
+              )}
+            </div>
+          </DialogContent>
+        </Dialog>
+
         {/* Gallery */}
         {garments.length > 0 ? (
           <Card>
@@ -337,9 +488,18 @@ export default function GarmentsPage() {
                   <Shirt className="h-5 w-5" />
                   Tu Armario Virtual
                 </CardTitle>
-                <Button variant="outline" size="sm">
-                  <Plus className="mr-2 h-4 w-4" />
-                  Añadir Más
+                <Button variant="outline" size="sm" asChild>
+                  <label className="cursor-pointer">
+                    <Plus className="mr-2 h-4 w-4" />
+                    Añadir Más
+                    <input
+                      type="file"
+                      multiple
+                      accept="image/*"
+                      className="hidden"
+                      onChange={handleFileChange}
+                    />
+                  </label>
                 </Button>
               </div>
               <CardDescription>
@@ -347,37 +507,141 @@ export default function GarmentsPage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
-                {garments.map((garment, index) => (
-                  <div 
-                    key={garment.url} 
-                    className="group relative aspect-square rounded-lg overflow-hidden bg-muted hover:scale-[1.02] transition-transform duration-200"
-                  >
-                    <img 
-                      src={garment.url} 
-                      alt={`Prenda ${index + 1}`}
-                      className="w-full h-full object-cover" 
-                    />
-                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-200" />
-                    <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                      <Button
-                        size="sm"
-                        variant="destructive"
-                        onClick={() => removeImage(index)}
-                        className="h-8 w-8 p-0"
-                        title="Eliminar prenda"
-                      >
-                        <X className="h-4 w-4" />
-                      </Button>
-                    </div>
-                    <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-2">
-                      <p className="text-white text-xs font-medium">
-                        #{index + 1}
-                      </p>
-                    </div>
+              <Tabs defaultValue="todas" className="w-full">
+                <TabsList className="grid w-full grid-cols-7">
+                  <TabsTrigger value="todas" className="flex items-center gap-1">
+                    <Tag className="h-3 w-3" />
+                    Todas
+                  </TabsTrigger>
+                  {garmentCategories.map((category) => (
+                    <TabsTrigger 
+                      key={category.key} 
+                      value={category.key}
+                      className="flex items-center gap-1"
+                      disabled={category.count === 0}
+                    >
+                      <span className="text-xs">{category.icon}</span>
+                      {category.name}
+                      {category.count > 0 && (
+                        <Badge variant="secondary" className="ml-1 text-xs">
+                          {category.count}
+                        </Badge>
+                      )}
+                    </TabsTrigger>
+                  ))}
+                </TabsList>
+                
+                <TabsContent value="todas" className="mt-4">
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
+                    {garments.map((garment, index) => {
+                      const categoryData = garment.category ? categoryInfo[garment.category] : null
+                      return (
+                        <div 
+                          key={garment.url} 
+                          className="group relative aspect-square rounded-lg overflow-hidden bg-muted hover:scale-[1.02] transition-transform duration-200"
+                        >
+                          <img 
+                            src={garment.url} 
+                            alt={`Prenda ${index + 1}`}
+                            className="w-full h-full object-cover" 
+                          />
+                          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-200" />
+                          <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              onClick={() => removeImage(index)}
+                              className="h-8 w-8 p-0"
+                              title="Eliminar prenda"
+                            >
+                              <X className="h-4 w-4" />
+                            </Button>
+                          </div>
+                          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-2">
+                            <div className="flex items-center justify-between">
+                              <p className="text-white text-xs font-medium">
+                                #{index + 1}
+                              </p>
+                              {categoryData && (
+                                <span className="text-white text-xs">
+                                  {categoryData.icon}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      )
+                    })}
                   </div>
+                </TabsContent>
+                
+                {garmentCategories.map((category) => (
+                  <TabsContent key={category.key} value={category.key} className="mt-4">
+                    {garmentsByCategory[category.key]?.length > 0 ? (
+                      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
+                        {garmentsByCategory[category.key].map((garment, index) => (
+                          <div 
+                            key={garment.url} 
+                            className="group relative aspect-square rounded-lg overflow-hidden bg-muted hover:scale-[1.02] transition-transform duration-200"
+                          >
+                            <img 
+                              src={garment.url} 
+                              alt={`${category.name} ${index + 1}`}
+                              className="w-full h-full object-cover" 
+                            />
+                            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-200" />
+                            <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                              <Button
+                                size="sm"
+                                variant="destructive"
+                                onClick={() => {
+                                  const globalIndex = garments.findIndex(g => g.url === garment.url)
+                                  if (globalIndex !== -1) removeImage(globalIndex)
+                                }}
+                                className="h-8 w-8 p-0"
+                                title="Eliminar prenda"
+                              >
+                                <X className="h-4 w-4" />
+                              </Button>
+                            </div>
+                            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-2">
+                              <div className="flex items-center justify-between">
+                                <p className="text-white text-xs font-medium">
+                                  {category.name} #{index + 1}
+                                </p>
+                                <span className="text-white text-sm">
+                                  {category.icon}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="flex flex-col items-center justify-center py-12 text-center">
+                        <div className="text-4xl mb-4">{category.icon}</div>
+                        <h3 className="text-lg font-semibold mb-2">Sin {category.name}</h3>
+                        <p className="text-muted-foreground mb-4">
+                          No tienes {category.description.toLowerCase()} en tu armario
+                        </p>
+                        <Button variant="outline" size="sm" asChild>
+                          <label className="cursor-pointer">
+                            <Plus className="mr-2 h-4 w-4" />
+                            Añadir {category.name}
+                            <input
+                              type="file"
+                              multiple
+                              accept="image/*"
+                              className="hidden"
+                              onChange={handleFileChange}
+                            />
+                          </label>
+                        </Button>
+                      </div>
+                    )}
+                  </TabsContent>
                 ))}
-              </div>
+              </Tabs>
             </CardContent>
           </Card>
         ) : (

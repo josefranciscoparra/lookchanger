@@ -27,7 +27,9 @@ export async function POST(req: NextRequest) {
         fullBodyVisible: true,
         showShoes: true,
         hideHatsAndCaps: true,
-        adaptShoesToLook: true
+        adaptShoesToLook: true,
+        removeSunglasses: false,
+        onlySelectedGarments: false
       }
     } = await req.json()
     
