@@ -99,7 +99,8 @@ export default function OutfitsPage() {
     hideHatsAndCaps: true,
     adaptShoesToLook: true,
     removeSunglasses: false,
-    onlySelectedGarments: false
+    onlySelectedGarments: false,
+    photoStyle: 'original' as 'original' | 'studio' | 'outdoor' | 'casual' | 'professional'
   })
   
   // UI states
@@ -397,7 +398,8 @@ export default function OutfitsPage() {
       hideHatsAndCaps: true,
       adaptShoesToLook: true,
       removeSunglasses: false,
-      onlySelectedGarments: false
+      onlySelectedGarments: false,
+      photoStyle: 'original' as 'original' | 'studio' | 'outdoor' | 'casual' | 'professional'
     })
     setOutputs([])
     setError('')
@@ -815,6 +817,30 @@ export default function OutfitsPage() {
                       }
                     />
                   </div>
+                  
+                  <div className="space-y-2 rounded-xl border border-primary/15 bg-white/80 px-4 py-3">
+                    <div className="space-y-0.5">
+                      <label className="text-sm font-medium text-foreground/90">Estilo fotográfico</label>
+                      <p className="text-xs text-muted-foreground">Fondo e iluminación de la imagen</p>
+                    </div>
+                    <Select
+                      value={outfitOptions.photoStyle}
+                      onValueChange={(value: 'original' | 'studio' | 'outdoor' | 'casual' | 'professional') => 
+                        setOutfitOptions(prev => ({...prev, photoStyle: value}))
+                      }
+                    >
+                      <SelectTrigger className="w-full bg-white/90">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="original">Original (mantener fondo)</SelectItem>
+                        <SelectItem value="studio">Estudio profesional</SelectItem>
+                        <SelectItem value="outdoor">Exterior/aire libre</SelectItem>
+                        <SelectItem value="casual">Ambiente casual/interior</SelectItem>
+                        <SelectItem value="professional">Entorno profesional</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
               </div>
             </div>
@@ -838,6 +864,13 @@ export default function OutfitsPage() {
                       <p>• Accesorios: {outfitOptions.hideHatsAndCaps ? 'Sin gorros/gorras' : 'Todos permitidos'}</p>
                       <p>• Gafas de sol: {outfitOptions.removeSunglasses ? 'Eliminadas' : 'Solo si las lleva el modelo'}</p>
                       <p>• Reemplazo de ropa: {outfitOptions.onlySelectedGarments ? 'Solo prendas seleccionadas' : 'Coordinación inteligente'}</p>
+                      <p>• Estilo fotográfico: {
+                        outfitOptions.photoStyle === 'original' ? 'Original (mantener fondo)' :
+                        outfitOptions.photoStyle === 'studio' ? 'Estudio profesional' :
+                        outfitOptions.photoStyle === 'outdoor' ? 'Exterior/aire libre' :
+                        outfitOptions.photoStyle === 'casual' ? 'Ambiente casual/interior' :
+                        outfitOptions.photoStyle === 'professional' ? 'Entorno profesional' : 'Original'
+                      }</p>
                       {variants > 1 && variantConfigs.length > 0 && (
                         <div className="ml-4 space-y-0.5 text-xs">
                           {variantConfigs.map(config => (

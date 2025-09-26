@@ -10,6 +10,22 @@ interface VariantConfig {
   description?: string
 }
 
+function getPhotoStylePrompt(style: string): string {
+  switch (style) {
+    case 'studio':
+      return 'Use professional studio photography with clean white or neutral background, professional lighting setup, and controlled shadows'
+    case 'outdoor':
+      return 'Use natural outdoor setting with natural lighting, could be urban street, park, or outdoor environment'
+    case 'casual':
+      return 'Use casual indoor setting like home, cafe, or relaxed environment with soft natural lighting'
+    case 'professional':
+      return 'Use professional business environment with clean background, professional lighting, and formal composition'
+    case 'original':
+    default:
+      return 'Keep the same background, lighting, and photographic style as the original model image'
+  }
+}
+
 export async function generateLook({
   modelUrls,
   garmentUrls,
@@ -66,7 +82,8 @@ ADDITIONAL OUTFIT OPTIONS:
 - Head accessories: ${outfitOptions.hideHatsAndCaps ? 'Do NOT add hats, caps, beanies or any head coverings' : 'Head accessories are allowed if they complement the outfit'}
 - Shoe styling: ${outfitOptions.adaptShoesToLook ? 'Choose stylish footwear that perfectly matches and complements the outfit colors, style and occasion. Ensure shoes are clearly visible and well-coordinated' : 'Use simple, neutral footwear (sneakers, basic flats, or similar)'}
 - Sunglasses policy: ${outfitOptions.removeSunglasses ? 'Remove any sunglasses from the person - the eyes should be visible and clear' : 'Keep sunglasses only if the original model is wearing them, otherwise do NOT add sunglasses'}
-- Clothing replacement: ${outfitOptions.onlySelectedGarments ? 'STRICT MODE: Remove every piece of clothing from the original image and dress the person exclusively with the provided garments' : 'Standard replacement with smart clothing coordination'}`
+- Clothing replacement: ${outfitOptions.onlySelectedGarments ? 'STRICT MODE: Remove every piece of clothing from the original image and dress the person exclusively with the provided garments' : 'Standard replacement with smart clothing coordination'}
+- Photography style: ${getPhotoStylePrompt(outfitOptions.photoStyle)}`
 
   // Generar instrucciones específicas para cada variante
   if (variants > 1 && variantConfigs.length > 0) {
