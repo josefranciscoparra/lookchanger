@@ -5,7 +5,14 @@ export const runtime = 'nodejs'
 
 export async function POST(req: NextRequest) {
   try {
-    const { modelUrls = [], garmentUrls = [], variants = 2 } = await req.json()
+    const { 
+      modelUrls = [], 
+      garmentUrls = [], 
+      variants = 2, 
+      style = { style: 'casual', season: 'any' },
+      useAdvancedStyle = false,
+      modelCharacteristics 
+    } = await req.json()
     
     if (!modelUrls.length || !garmentUrls.length) {
       return NextResponse.json({ 
@@ -21,7 +28,13 @@ export async function POST(req: NextRequest) {
 
     console.log(`Generando ${variants} variantes con ${modelUrls.length} modelos y ${garmentUrls.length} prendas`)
     
-    const outputs = await generateLook({ modelUrls, garmentUrls, variants })
+    const outputs = await generateLook({ 
+      modelUrls, 
+      garmentUrls, 
+      variants, 
+      style: useAdvancedStyle ? style : undefined, 
+      modelCharacteristics 
+    })
     
     if (!outputs.length) {
       return NextResponse.json({ 

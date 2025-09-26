@@ -5,25 +5,51 @@ if (!OPENROUTER_API_KEY) console.warn('[gemini] OPENROUTER_API_KEY no está defi
 export async function generateLook({
   modelUrls,
   garmentUrls,
-  variants = 2
-}: { modelUrls: string[], garmentUrls: string[], variants?: number }): Promise<string[]> {
+  variants = 2,
+  style = { style: 'casual', season: 'any' },
+  modelCharacteristics
+}: { 
+  modelUrls: string[], 
+  garmentUrls: string[], 
+  variants?: number,
+  style?: { style: string, season: string },
+  modelCharacteristics?: any
+}): Promise<string[]> {
   // Si no hay API_KEY, devolvemos imágenes "eco" (echo) para demo
   if (!OPENROUTER_API_KEY) {
     return garmentUrls.slice(0, variants).map((g, i) => g)
+  }
+
+  // Crear el prompt base
+  let promptText = `Create a photorealistic virtual try-on image. 
+IMPORTANT: Generate ${variants} actual images, not descriptions.
+
+Instructions:
+- Take the person from the first image
+- REPLACE their existing clothing with the garments shown below
+- The person should ONLY wear the new garments (remove original clothes)
+- Keep the person's face, hair, and body shape exactly the same
+- Fit the garments naturally on the person's body
+- For dresses: remove any pants, shirts or conflicting items
+- For tops: keep bottom clothing if no bottom garment provided
+- Maintain proper lighting and perspective
+- Use neutral background
+- Generate actual images, not text descriptions`
+
+  // Añadir información de estilo si está activada
+  if (style && style.style && style.season) {
+    promptText += `
+
+Style Preferences:
+- Style: ${style.style} (adjust clothing fit, accessories, and overall aesthetic accordingly)
+- Season: ${style.season === 'any' ? 'universal styling' : style.season + ' season appropriate'}`
   }
 
   // Preparar el contenido del mensaje
   const content = [
     {
       type: "text",
-      text: `Create a photorealistic virtual try-on image. Take the person from the first image and put the clothing items shown in the garment images on them. 
-IMPORTANT: Generate ${variants} actual images, not descriptions. 
-Requirements:
-- Keep the person's face, hair, and skin tone exactly the same
-- Fit the garments naturally on the person's body
-- Maintain proper lighting and perspective
-- Use neutral background
-- Generate actual images, not text descriptions`
+      text: promptText
     }
   ]
 

@@ -14,6 +14,7 @@ import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Progress } from '@/components/ui/progress'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Switch } from '@/components/ui/switch'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { Separator } from '@/components/ui/separator'
 
@@ -49,6 +50,7 @@ export default function OutfitsPage() {
   })
   const [selectedGarments, setSelectedGarments] = useState<string[]>([])
   const [variants, setVariants] = useState(2)
+  const [useAdvancedStyle, setUseAdvancedStyle] = useState(false)
   const [stylePreferences, setStylePreferences] = useState({
     style: 'casual',
     season: 'any'
@@ -136,7 +138,8 @@ export default function OutfitsPage() {
           modelUrls,
           garmentUrls: selectedGarments,
           variants,
-          style: stylePreferences,
+          style: useAdvancedStyle ? stylePreferences : undefined,
+          useAdvancedStyle,
           modelCharacteristics: selectedModelType === 'generated' ? modelCharacteristics : undefined
         })
       })
@@ -171,6 +174,8 @@ export default function OutfitsPage() {
     setSelectedModel('')
     setSelectedGarments([])
     setModelCharacteristics({ skinTone: '', bodyType: '', gender: '', age: '' })
+    setUseAdvancedStyle(false)
+    setStylePreferences({ style: 'casual', season: 'any' })
     setOutputs([])
     setError('')
     setGenerationProgress(0)
@@ -383,7 +388,21 @@ export default function OutfitsPage() {
       case 'style':
         return (
           <div className="space-y-6">
-            <div className="grid gap-6">
+            <div className="flex items-center justify-between p-4 border rounded-lg">
+              <div className="space-y-0.5">
+                <label className="text-base font-medium">Configuración avanzada de estilo</label>
+                <p className="text-sm text-muted-foreground">
+                  Personaliza el estilo, temporada y preferencias del outfit
+                </p>
+              </div>
+              <Switch 
+                checked={useAdvancedStyle} 
+                onCheckedChange={setUseAdvancedStyle}
+              />
+            </div>
+            
+            {useAdvancedStyle && (
+              <div className="grid gap-6">
               <div>
                 <label className="text-sm font-medium mb-2 block">Estilo de outfit</label>
                 <Select value={stylePreferences.style} onValueChange={(value) => 
@@ -438,7 +457,8 @@ export default function OutfitsPage() {
                   Más variantes = más opciones pero mayor tiempo de procesamiento
                 </p>
               </div>
-            </div>
+              </div>
+            )}
             
             <Card className="border-purple-200 bg-purple-50">
               <CardContent className="pt-4">
@@ -449,8 +469,10 @@ export default function OutfitsPage() {
                     <div className="text-sm text-purple-800 space-y-1">
                       <p>• Modelo: {selectedModelType === 'existing' ? 'Existente seleccionado' : 'Generado por IA'}</p>
                       <p>• Prendas: {selectedGarments.length} seleccionada{selectedGarments.length !== 1 ? 's' : ''}</p>
-                      <p>• Estilo: {stylePreferences.style}</p>
+                      {useAdvancedStyle && <p>• Estilo: {stylePreferences.style}</p>}
+                      {useAdvancedStyle && <p>• Temporada: {stylePreferences.season}</p>}
                       <p>• Variantes: {variants}</p>
+                      {!useAdvancedStyle && <p>• Configuración: Básica (automática)</p>}
                     </div>
                   </div>
                 </div>
