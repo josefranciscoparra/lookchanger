@@ -2,16 +2,26 @@ const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY
 
 if (!OPENROUTER_API_KEY) console.warn('[gemini] OPENROUTER_API_KEY no está definido (modo demo)')
 
+type VariantType = 'pose' | 'fit' | 'lighting' | 'angle' | 'accessories'
+
+interface VariantConfig {
+  id: number
+  type: VariantType
+  description?: string
+}
+
 export async function generateLook({
   modelUrls,
   garmentUrls,
-  variants = 2,
+  variants = 1,
+  variantConfigs = [],
   style = { style: 'casual', season: 'any' },
   modelCharacteristics
 }: { 
   modelUrls: string[], 
   garmentUrls: string[], 
   variants?: number,
+  variantConfigs?: VariantConfig[],
   style?: { style: string, season: string },
   modelCharacteristics?: any
 }): Promise<string[]> {
@@ -20,21 +30,59 @@ export async function generateLook({
     return garmentUrls.slice(0, variants).map((g, i) => g)
   }
 
-  // Crear el prompt base
-  let promptText = `Create a photorealistic virtual try-on image. 
-IMPORTANT: Generate ${variants} actual images, not descriptions.
+  // Crear el prompt base con configuraciones específicas de variantes
+  let promptText = `Create ${variants} photorealistic virtual try-on images using EXACTLY the same garments in all variants.
 
-Instructions:
+CORE REQUIREMENTS (apply to ALL variants):
 - Take the person from the first image
 - REPLACE their existing clothing with the garments shown below
-- The person should ONLY wear the new garments (remove original clothes)
+- The person should ONLY wear the new garments (remove original clothes)  
 - Keep the person's face, hair, and body shape exactly the same
 - Fit the garments naturally on the person's body
 - For dresses: remove any pants, shirts or conflicting items
-- For tops: keep bottom clothing if no bottom garment provided
-- Maintain proper lighting and perspective
-- Use neutral background
-- Generate actual images, not text descriptions`
+- For tops: keep bottom clothing if no bottom garment provided`
+
+  // Generar instrucciones específicas para cada variante
+  if (variants > 1 && variantConfigs.length > 0) {
+    promptText += `\n\nVARIANT SPECIFICATIONS:`
+    
+    // Variante 1 siempre es la original
+    promptText += `\n- Image 1: Standard frontal pose with neutral lighting and direct camera angle`
+    
+    // Variantes adicionales según configuración
+    for (let i = 0; i < Math.min(variantConfigs.length, variants - 1); i++) {
+      const config = variantConfigs[i]
+      const variantNumber = i + 2
+      
+      let variantInstruction = `\n- Image ${variantNumber}: `
+      
+      switch (config.type) {
+        case 'pose':
+          variantInstruction += 'Same garments with different pose (walking, sitting, or 3/4 turn - choose naturally)'
+          break
+        case 'fit':
+          variantInstruction += 'Same garments with different fit/draping (slightly looser or more fitted styling)'
+          break
+        case 'lighting':
+          variantInstruction += 'Same garments with different lighting (soft studio lighting, natural daylight, or dramatic shadows)'
+          break
+        case 'angle':
+          variantInstruction += 'Same garments from different camera angle (3/4 view, side profile, or slight back angle)'
+          break
+        case 'accessories':
+          variantInstruction += 'Same garments with subtle complementary accessories (belt, jewelry, or scarf that matches the style)'
+          break
+        default:
+          variantInstruction += 'Same garments with subtle variation in pose or styling'
+      }
+      
+      promptText += variantInstruction
+    }
+  } else {
+    promptText += `\n\n- Generate standard frontal pose with neutral lighting`
+  }
+
+  promptText += `\n\nCRITICAL: All variants must use the EXACT same garments. Only vary the specified elements above.`
 
   // Añadir información de estilo si está activada
   if (style && style.style && style.season) {

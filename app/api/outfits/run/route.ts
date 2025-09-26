@@ -5,12 +5,21 @@ import { saveGeneratedImageToStorage } from '@/lib/storage'
 
 export const runtime = 'nodejs'
 
+type VariantType = 'pose' | 'fit' | 'lighting' | 'angle' | 'accessories'
+
+interface VariantConfig {
+  id: number
+  type: VariantType
+  description?: string
+}
+
 export async function POST(req: NextRequest) {
   try {
     const { 
       modelUrls = [], 
       garmentUrls = [], 
-      variants = 2, 
+      variants = 1, 
+      variantConfigs = [],
       style = { style: 'casual', season: 'any' },
       useAdvancedStyle = false,
       modelCharacteristics 
@@ -40,7 +49,8 @@ export async function POST(req: NextRequest) {
     const outputs = await generateLook({ 
       modelUrls, 
       garmentUrls, 
-      variants, 
+      variants,
+      variantConfigs, 
       style: useAdvancedStyle ? style : undefined, 
       modelCharacteristics 
     })

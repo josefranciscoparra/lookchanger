@@ -28,6 +28,42 @@ interface ModelCharacteristics {
   age: string
 }
 
+type VariantType = 'pose' | 'fit' | 'lighting' | 'angle' | 'accessories'
+
+interface VariantConfig {
+  id: number
+  type: VariantType
+  description?: string
+}
+
+const VARIANT_OPTIONS = {
+  pose: {
+    label: 'Cambio de pose',
+    description: 'Poses diferentes: lateral, caminando, sentada',
+    icon: '🕺'
+  },
+  fit: {
+    label: 'Ajuste diferente',
+    description: 'Variación en el ajuste: más ceñido/suelto, diferentes pliegues',
+    icon: '👔'
+  },
+  lighting: {
+    label: 'Cambio de iluminación',
+    description: 'Iluminación diferente: estudio, natural, dramática',
+    icon: '💡'
+  },
+  angle: {
+    label: 'Ángulo de cámara',
+    description: 'Vista diferente: 3/4, perfil, vista trasera',
+    icon: '📷'
+  },
+  accessories: {
+    label: 'Accesorios complementarios',
+    description: 'Añadir complementos sutiles que combinen',
+    icon: '👜'
+  }
+} as const
+
 export default function OutfitsPage() {
   // Usar Zustand store para modelos y prendas
   const { models, garments, initialize } = useAppStore()
@@ -49,7 +85,8 @@ export default function OutfitsPage() {
     age: ''
   })
   const [selectedGarments, setSelectedGarments] = useState<string[]>([])
-  const [variants, setVariants] = useState(2)
+  const [variants, setVariants] = useState(1)
+  const [variantConfigs, setVariantConfigs] = useState<VariantConfig[]>([])
   const [useAdvancedStyle, setUseAdvancedStyle] = useState(false)
   const [stylePreferences, setStylePreferences] = useState({
     style: 'casual',
@@ -64,6 +101,45 @@ export default function OutfitsPage() {
   useEffect(() => {
     initialize()
   }, [initialize])
+
+  // Helper functions para manejar variantes
+  const updateVariantCount = useCallback((newCount: number) => {
+    setVariants(newCount)
+    
+    // Ajustar configuraciones de variantes
+    if (newCount > 1) {
+      const currentConfigsCount = variantConfigs.length
+      const neededConfigs = newCount - 1 // -1 porque la primera variante siempre es la original
+      
+      if (neededConfigs > currentConfigsCount) {
+        // Añadir configuraciones por defecto
+        const newConfigs = [...variantConfigs]
+        const defaultTypes: VariantType[] = ['pose', 'fit', 'lighting', 'angle', 'accessories']
+        
+        for (let i = currentConfigsCount; i < neededConfigs; i++) {
+          newConfigs.push({
+            id: i + 2, // +2 porque la variante 1 es la original
+            type: defaultTypes[i % defaultTypes.length]
+          })
+        }
+        setVariantConfigs(newConfigs)
+      } else if (neededConfigs < currentConfigsCount) {
+        // Remover configuraciones sobrantes
+        setVariantConfigs(variantConfigs.slice(0, neededConfigs))
+      }
+    } else {
+      // Solo 1 variante, limpiar configuraciones
+      setVariantConfigs([])
+    }
+  }, [variantConfigs])
+
+  const updateVariantConfig = useCallback((variantId: number, type: VariantType) => {
+    setVariantConfigs(configs => 
+      configs.map(config => 
+        config.id === variantId ? { ...config, type } : config
+      )
+    )
+  }, [])
 
   const steps: Array<{step: WizardStep, title: string, description: string, icon: any}> = [
     { step: 'model', title: 'Seleccionar Modelo', description: 'Elige o genera un modelo', icon: User },
@@ -138,6 +214,7 @@ export default function OutfitsPage() {
           modelUrls,
           garmentUrls: selectedGarments,
           variants,
+          variantConfigs,
           style: useAdvancedStyle ? stylePreferences : undefined,
           useAdvancedStyle,
           modelCharacteristics: selectedModelType === 'generated' ? modelCharacteristics : undefined
@@ -440,23 +517,6 @@ export default function OutfitsPage() {
                 </Select>
               </div>
               
-              <div>
-                <label className="text-sm font-medium mb-2 block">Número de variantes: {variants}</label>
-                <div className="flex items-center gap-4">
-                  <input
-                    type="range"
-                    min="1"
-                    max="4"
-                    value={variants}
-                    onChange={(e) => setVariants(Number(e.target.value))}
-                    className="flex-1"
-                  />
-                  <Badge variant="outline">{variants} variante{variants !== 1 ? 's' : ''}</Badge>
-                </div>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Más variantes = más opciones pero mayor tiempo de procesamiento
-                </p>
-              </div>
               </div>
             )}
             
@@ -471,7 +531,16 @@ export default function OutfitsPage() {
                       <p>• Prendas: {selectedGarments.length} seleccionada{selectedGarments.length !== 1 ? 's' : ''}</p>
                       {useAdvancedStyle && <p>• Estilo: {stylePreferences.style}</p>}
                       {useAdvancedStyle && <p>• Temporada: {stylePreferences.season}</p>}
-                      <p>• Variantes: {variants}</p>
+                      <p>• Imágenes: {variants === 1 ? '1 imagen original' : `${variants} variantes`}</p>
+                      {variants > 1 && variantConfigs.length > 0 && (
+                        <div className="ml-4 text-xs space-y-0.5">
+                          {variantConfigs.map(config => (
+                            <p key={config.id}>
+                              - Imagen {config.id}: {VARIANT_OPTIONS[config.type].label}
+                            </p>
+                          ))}
+                        </div>
+                      )}
                       {!useAdvancedStyle && <p>• Configuración: Básica (automática)</p>}
                     </div>
                   </div>
@@ -653,6 +722,112 @@ export default function OutfitsPage() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Configuración de Variantes */}
+        {(currentStep === 'style' || currentStep === 'generate' || currentStep === 'results') && (
+          <Card className="border-blue-200 bg-blue-50">
+            <CardContent className="pt-6">
+              <div className="flex items-start gap-4">
+                <div className="p-2 bg-blue-100 rounded-full">
+                  <Camera className="h-5 w-5 text-blue-600" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-semibold text-blue-900 mb-2">Configuración de Variantes</h3>
+                  <p className="text-sm text-blue-800 mb-4">
+                    Controla cuántas imágenes generar y qué tipo de variaciones quieres
+                  </p>
+                  
+                  {/* Control de número de variantes */}
+                  <div className="mb-4">
+                    <div className="flex items-center gap-3 mb-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => updateVariantCount(Math.max(1, variants - 1))}
+                        disabled={variants <= 1}
+                        className="h-8 w-8 p-0"
+                      >
+                        -
+                      </Button>
+                      <span className="text-sm font-medium min-w-[80px] text-center">
+                        {variants} imagen{variants !== 1 ? 'es' : ''}
+                      </span>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => updateVariantCount(Math.min(4, variants + 1))}
+                        disabled={variants >= 4}
+                        className="h-8 w-8 p-0"
+                      >
+                        +
+                      </Button>
+                      <Badge variant="outline" className="ml-2">
+                        {variants === 1 ? 'Básico' : `${variants} variantes`}
+                      </Badge>
+                    </div>
+                    <p className="text-xs text-blue-700">
+                      {variants === 1 
+                        ? 'Una imagen con las prendas exactas' 
+                        : `${variants} imágenes con variaciones controladas`
+                      }
+                    </p>
+                  </div>
+
+                  {/* Configuración de variantes adicionales */}
+                  {variants > 1 && (
+                    <div className="space-y-3">
+                      <div className="text-xs font-medium text-blue-700 mb-2">
+                        Tipos de variación:
+                      </div>
+                      
+                      {/* Variante 1 siempre es la original */}
+                      <div className="flex items-center gap-3 p-2 bg-blue-100/50 rounded-lg">
+                        <span className="text-sm font-medium w-16">Imagen 1:</span>
+                        <span className="text-sm text-blue-700">Original (frontal, iluminación neutral)</span>
+                        <Badge variant="secondary" className="ml-auto">📸</Badge>
+                      </div>
+                      
+                      {/* Variantes configurables */}
+                      {variantConfigs.map((config, index) => (
+                        <div key={config.id} className="flex items-center gap-3 p-2 border border-blue-200 rounded-lg bg-white">
+                          <span className="text-sm font-medium w-16">Imagen {config.id}:</span>
+                          <Select
+                            value={config.type}
+                            onValueChange={(value: VariantType) => updateVariantConfig(config.id, value)}
+                          >
+                            <SelectTrigger className="flex-1">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {Object.entries(VARIANT_OPTIONS).map(([key, option]) => (
+                                <SelectItem key={key} value={key}>
+                                  <div className="flex items-center gap-2">
+                                    <span>{option.icon}</span>
+                                    <span>{option.label}</span>
+                                  </div>
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <Tooltip>
+                            <TooltipTrigger>
+                              <Info className="h-4 w-4 text-muted-foreground" />
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p className="max-w-[200px]">
+                                {VARIANT_OPTIONS[config.type].description}
+                              </p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Step Content */}
         <Card className="min-h-[400px]">
