@@ -2,10 +2,10 @@
 'use client'
 import React, { useEffect, useState, useCallback } from 'react'
 import { useAppStore } from '@/lib/store'
-import { 
+import {
   Wand2, Info, AlertTriangle, User, Shirt,
   ArrowRight, ArrowLeft, CheckCircle, Upload, Users, Palette,
-  Zap, Star, Camera
+  Zap, Star, Camera, Eye
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -104,6 +104,9 @@ export default function OutfitsPage() {
   const [isPreviewOpen, setIsPreviewOpen] = useState(false)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const [previewIndex, setPreviewIndex] = useState<number | null>(null)
+  const [previewContext, setPreviewContext] = useState<'outfit' | 'garment' | 'model' | null>(null)
+  const [previewTitle, setPreviewTitle] = useState('Vista previa')
+  const [previewSubtitle, setPreviewSubtitle] = useState('')
 
   useEffect(() => {
     initialize()
@@ -173,22 +176,39 @@ export default function OutfitsPage() {
     URL.revokeObjectURL(objectUrl)
   }, [])
 
-  const handleOpenPreview = useCallback((url: string, index: number) => {
-    setPreviewUrl(url)
-    setPreviewIndex(index)
-    setIsPreviewOpen(true)
-  }, [])
+  const handleOpenPreview = useCallback(
+    (
+      url: string,
+      options?: {
+        index?: number | null
+        title?: string
+        subtitle?: string
+        context?: 'outfit' | 'garment' | 'model' | null
+      }
+    ) => {
+      setPreviewUrl(url)
+      setPreviewIndex(options?.index ?? null)
+      setPreviewContext(options?.context ?? null)
+      setPreviewTitle(options?.title ?? 'Vista previa')
+      setPreviewSubtitle(options?.subtitle ?? '')
+      setIsPreviewOpen(true)
+    },
+    []
+  )
 
   const handlePreviewChange = useCallback((open: boolean) => {
     setIsPreviewOpen(open)
     if (!open) {
       setPreviewUrl(null)
       setPreviewIndex(null)
+      setPreviewContext(null)
+      setPreviewTitle('Vista previa')
+      setPreviewSubtitle('')
     }
   }, [])
 
   const handleDownloadSingle = useCallback(async () => {
-    if (!previewUrl) return
+    if (!previewUrl || previewContext !== 'outfit') return
     try {
       setDownloadError('')
       setDownloadingSingle(true)
@@ -369,6 +389,9 @@ export default function OutfitsPage() {
     setIsPreviewOpen(false)
     setPreviewUrl(null)
     setPreviewIndex(null)
+    setPreviewContext(null)
+    setPreviewTitle('Vista previa')
+    setPreviewSubtitle('')
     setDownloadingAll(false)
     setDownloadingSingle(false)
   }, [])
@@ -530,38 +553,78 @@ export default function OutfitsPage() {
         return (
           <div className="space-y-6">
             {garments.length > 0 ? (
-              <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
+              <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
                 {garments.map((garment, index) => {
                   const isSelected = selectedGarments.includes(garment.url)
 
+                  const toggleGarmentSelection = () => {
+                    setSelectedGarments(prev =>
+                      prev.includes(garment.url)
+                        ? prev.filter(g => g !== garment.url)
+                        : [...prev, garment.url]
+                    )
+                  }
+
                   return (
-                    <button
-                      type="button"
+                    <div
                       key={garment.url}
-                      onClick={() => {
-                        setSelectedGarments(prev =>
-                          prev.includes(garment.url)
-                            ? prev.filter(g => g !== garment.url)
-                            : [...prev, garment.url]
-                        )
+                      role="button"
+                      tabIndex={0}
+                      aria-pressed={isSelected}
+                      onClick={toggleGarmentSelection}
+                      onKeyDown={(event) => {
+                        if (event.key === 'Enter' || event.key === ' ') {
+                          event.preventDefault()
+                          toggleGarmentSelection()
+                        }
                       }}
-                      className={`group relative overflow-hidden rounded-2xl border border-transparent bg-white/80 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 ${
-                        isSelected ? 'border-primary/30 ring-2 ring-primary/30 shadow-lg' : ''
+                      className={`group relative flex h-full flex-col overflow-hidden rounded-3xl border border-transparent bg-white/85 shadow-md transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl focus:outline-none focus:ring-2 focus:ring-primary/40 ${
+                        isSelected ? 'border-primary/40 ring-2 ring-primary/30 shadow-xl' : ''
                       }`}
                     >
-                      <img
-                        src={garment.url}
-                        alt={`Prenda ${index + 1}`}
-                        className="aspect-square w-full object-cover"
-                      />
-                      <div className="absolute inset-x-2 top-2 flex items-center justify-between rounded-full bg-white/80 px-3 py-1 text-xs font-medium text-muted-foreground">
-                        <span>Prenda #{index + 1}</span>
-                        {isSelected && <CheckCircle className="h-4 w-4 text-primary" />}
+                      <div className="relative aspect-[3/4] w-full overflow-hidden">
+                        <img
+                          src={garment.url}
+                          alt={`Prenda ${index + 1}`}
+                          className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+                        />
+                        {isSelected && (
+                          <div className="absolute left-4 top-4 flex items-center gap-2 rounded-full bg-white/85 px-3 py-1 text-sm font-medium text-primary">
+                            <CheckCircle className="h-4 w-4" />
+                            Seleccionada
+                          </div>
+                        )}
+                        <div className="absolute bottom-4 right-4">
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            className="h-11 w-11 rounded-full border-primary/30 bg-white/90 text-primary shadow-sm transition hover:bg-primary/20"
+                            onClick={(event) => {
+                              event.stopPropagation()
+                              handleOpenPreview(garment.url, {
+                                index: null,
+                                title: `Prenda ${index + 1}`,
+                                subtitle: 'Vista ampliada de la prenda seleccionada.',
+                                context: 'garment'
+                              })
+                            }}
+                          >
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                        </div>
                       </div>
-                      <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/40 via-black/10 to-transparent p-2 text-left">
-                        <p className="text-[11px] font-medium uppercase tracking-[0.08em] text-white/80">Toca para seleccionar</p>
+                      <div className="flex items-center justify-between gap-3 border-t border-primary/10 bg-white/95 px-5 py-4">
+                        <div>
+                          <p className="text-sm font-semibold text-foreground/90">Prenda #{index + 1}</p>
+                          <p className="text-xs text-muted-foreground">Haz clic o presiona Enter para alternar la selección.</p>
+                        </div>
+                        <CheckCircle
+                          className={`h-5 w-5 transition-colors ${
+                            isSelected ? 'text-primary' : 'text-muted-foreground/40'
+                          }`}
+                        />
                       </div>
-                    </button>
+                    </div>
                   )
                 })}
               </div>
@@ -739,11 +802,23 @@ export default function OutfitsPage() {
                   {outputs.map((url, index) => (
                     <Card
                       key={url}
-                      onClick={() => handleOpenPreview(url, index)}
+                      onClick={() =>
+                        handleOpenPreview(url, {
+                          index,
+                          title: `Variante ${index + 1}`,
+                          subtitle: `Estilo ${stylePreferences.style}`,
+                          context: 'outfit'
+                        })
+                      }
                       onKeyDown={(event) => {
                         if (event.key === 'Enter' || event.key === ' ') {
                           event.preventDefault()
-                          handleOpenPreview(url, index)
+                          handleOpenPreview(url, {
+                            index,
+                            title: `Variante ${index + 1}`,
+                            subtitle: `Estilo ${stylePreferences.style}`,
+                            context: 'outfit'
+                          })
                         }
                       }}
                       role="button"
@@ -1098,22 +1173,26 @@ export default function OutfitsPage() {
             <div className="flex flex-col">
               <DialogHeader className="space-y-1 px-6 pt-6">
                 <DialogTitle className="text-xl font-semibold text-foreground/90">
-                  Variante {(previewIndex ?? 0) + 1}
+                  {previewTitle}
                 </DialogTitle>
                 <p className="text-sm text-muted-foreground">
-                  Observa la propuesta en grande y guárdala cuando quieras.
+                  {previewSubtitle || 'Observa la propuesta en grande y guárdala cuando quieras.'}
                 </p>
               </DialogHeader>
               <div className="flex max-h-[70vh] items-center justify-center bg-gradient-to-br from-primary/5 via-white to-white px-4 py-6">
                 <img
                   src={previewUrl}
-                  alt={`Vista previa outfit ${(previewIndex ?? 0) + 1}`}
+                  alt={previewTitle}
                   className="max-h-[64vh] w-full rounded-2xl border border-white/70 object-contain shadow-inner"
                 />
               </div>
               <div className="flex flex-col gap-3 border-t border-primary/10 bg-white/95 px-6 py-4 text-sm sm:flex-row sm:items-center sm:justify-between">
                 <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground">
-                  Estilo {stylePreferences.style}
+                  {previewContext === 'outfit'
+                    ? `Estilo ${stylePreferences.style}`
+                    : previewContext === 'garment'
+                      ? 'Detalle de la prenda seleccionada'
+                      : 'Vista general'}
                 </p>
                 <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
                   <Button
@@ -1123,20 +1202,22 @@ export default function OutfitsPage() {
                   >
                     Abrir en pestaña nueva
                   </Button>
-                  <Button
-                    onClick={handleDownloadSingle}
-                    disabled={downloadingSingle}
-                    className="rounded-full bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground shadow-md transition hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-70"
-                  >
-                    {downloadingSingle ? (
-                      <>
-                        <div className="mr-2 h-4 w-4 animate-spin rounded-full border-[2px] border-primary-foreground border-t-transparent" />
-                        Descargando...
-                      </>
-                    ) : (
-                      'Descargar imagen'
-                    )}
-                  </Button>
+                  {previewContext === 'outfit' && (
+                    <Button
+                      onClick={handleDownloadSingle}
+                      disabled={downloadingSingle}
+                      className="rounded-full bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground shadow-md transition hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-70"
+                    >
+                      {downloadingSingle ? (
+                        <>
+                          <div className="mr-2 h-4 w-4 animate-spin rounded-full border-[2px] border-primary-foreground border-t-transparent" />
+                          Descargando...
+                        </>
+                      ) : (
+                        'Descargar imagen'
+                      )}
+                    </Button>
+                  )}
                 </div>
               </div>
             </div>
