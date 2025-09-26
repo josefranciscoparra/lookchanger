@@ -3,9 +3,9 @@
 import React, { useEffect, useState, useCallback } from 'react'
 import { useAppStore } from '@/lib/store'
 import { 
-  Wand2, Sparkles, Image, Info, AlertTriangle, User, Shirt, 
+  Wand2, Info, AlertTriangle, User, Shirt,
   ArrowRight, ArrowLeft, CheckCircle, Upload, Users, Palette,
-  Settings, Zap, Star, Camera, Plus, ChevronRight
+  Zap, Star, Camera
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -16,7 +16,8 @@ import { Progress } from '@/components/ui/progress'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
-import { Separator } from '@/components/ui/separator'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import JSZip from 'jszip'
 
 type WizardStep = 'model' | 'garments' | 'style' | 'generate' | 'results'
 type ModelType = 'existing' | 'generated'
@@ -97,6 +98,12 @@ export default function OutfitsPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string>('')
   const [generationProgress, setGenerationProgress] = useState(0)
+  const [downloadingAll, setDownloadingAll] = useState(false)
+  const [downloadingSingle, setDownloadingSingle] = useState(false)
+  const [downloadError, setDownloadError] = useState('')
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false)
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null)
+  const [previewIndex, setPreviewIndex] = useState<number | null>(null)
 
   useEffect(() => {
     initialize()
@@ -140,6 +147,104 @@ export default function OutfitsPage() {
       )
     )
   }, [])
+
+  const getFileExtension = (url: string) => {
+    const cleanUrl = url.split('?')[0]
+    const parts = cleanUrl.split('.')
+    const rawExtension = parts.length > 1 ? parts.pop() ?? '' : ''
+    const extension = rawExtension.trim().slice(0, 8)
+    return extension || 'jpg'
+  }
+
+  const downloadFile = useCallback(async (url: string, filename: string) => {
+    if (typeof window === 'undefined') return
+    const response = await fetch(url)
+    if (!response.ok) {
+      throw new Error(`No se pudo descargar ${filename}`)
+    }
+    const blob = await response.blob()
+    const objectUrl = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = objectUrl
+    link.download = filename
+    document.body.appendChild(link)
+    link.click()
+    link.remove()
+    URL.revokeObjectURL(objectUrl)
+  }, [])
+
+  const handleOpenPreview = useCallback((url: string, index: number) => {
+    setPreviewUrl(url)
+    setPreviewIndex(index)
+    setIsPreviewOpen(true)
+  }, [])
+
+  const handlePreviewChange = useCallback((open: boolean) => {
+    setIsPreviewOpen(open)
+    if (!open) {
+      setPreviewUrl(null)
+      setPreviewIndex(null)
+    }
+  }, [])
+
+  const handleDownloadSingle = useCallback(async () => {
+    if (!previewUrl) return
+    try {
+      setDownloadError('')
+      setDownloadingSingle(true)
+      const extension = getFileExtension(previewUrl)
+      const filename = `outfit-${(previewIndex ?? 0) + 1}.${extension}`
+      await downloadFile(previewUrl, filename)
+    } catch (err) {
+      console.error('Error descargando la imagen individual:', err)
+      setDownloadError('No se pudo descargar esta imagen. Intenta nuevamente.')
+    } finally {
+      setDownloadingSingle(false)
+    }
+  }, [downloadFile, previewIndex, previewUrl])
+
+  const handleOpenImageInNewTab = useCallback(() => {
+    if (!previewUrl) return
+    window.open(previewUrl, '_blank', 'noopener')
+  }, [previewUrl])
+
+  const handleDownloadAll = useCallback(async () => {
+    if (!outputs.length || downloadingAll) return
+    try {
+      setDownloadError('')
+      setDownloadingAll(true)
+      const zip = new JSZip()
+
+      await Promise.all(
+        outputs.map(async (url, index) => {
+          const response = await fetch(url)
+          if (!response.ok) {
+            throw new Error(`No se pudo descargar la imagen ${index + 1}`)
+          }
+          const blob = await response.blob()
+          const extension = getFileExtension(url)
+          zip.file(`outfit-${index + 1}.${extension}`, blob)
+        })
+      )
+
+      const zipBlob = await zip.generateAsync({ type: 'blob' })
+      if (typeof window !== 'undefined') {
+        const downloadUrl = URL.createObjectURL(zipBlob)
+        const link = document.createElement('a')
+        link.href = downloadUrl
+        link.download = `lookchanger-outfits-${new Date().toISOString().split('T')[0]}.zip`
+        document.body.appendChild(link)
+        link.click()
+        link.remove()
+        URL.revokeObjectURL(downloadUrl)
+      }
+    } catch (err) {
+      console.error('Error preparando la descarga de outfits:', err)
+      setDownloadError('No pudimos preparar la descarga. Intenta de nuevo en unos segundos.')
+    } finally {
+      setDownloadingAll(false)
+    }
+  }, [downloadingAll, outputs])
 
   const steps: Array<{step: WizardStep, title: string, description: string, icon: any}> = [
     { step: 'model', title: 'Seleccionar Modelo', description: 'Elige o genera un modelo', icon: User },
@@ -190,9 +295,13 @@ export default function OutfitsPage() {
   const generateOutfit = async () => {
     setLoading(true)
     setError('')
+    setDownloadError('')
     setOutputs([])
     setGenerationProgress(0)
     setCurrentStep('generate')
+    setIsPreviewOpen(false)
+    setPreviewUrl(null)
+    setPreviewIndex(null)
     
     try {
       // Simular progreso de generación
@@ -255,7 +364,13 @@ export default function OutfitsPage() {
     setStylePreferences({ style: 'casual', season: 'any' })
     setOutputs([])
     setError('')
+    setDownloadError('')
     setGenerationProgress(0)
+    setIsPreviewOpen(false)
+    setPreviewUrl(null)
+    setPreviewIndex(null)
+    setDownloadingAll(false)
+    setDownloadingSingle(false)
   }, [])
 
   const renderStepContent = () => {
@@ -264,12 +379,18 @@ export default function OutfitsPage() {
         return (
           <div className="space-y-6">
             <Tabs value={selectedModelType} onValueChange={(value) => setSelectedModelType(value as ModelType)}>
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="existing" className="flex items-center gap-2">
+              <TabsList className="grid w-full grid-cols-2 rounded-2xl bg-secondary/70 p-1 backdrop-blur">
+                <TabsTrigger
+                  value="existing"
+                  className="flex items-center gap-2 rounded-xl text-sm font-medium data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm"
+                >
                   <Users className="h-4 w-4" />
                   Usar Modelo Existente
                 </TabsTrigger>
-                <TabsTrigger value="generated" className="flex items-center gap-2">
+                <TabsTrigger
+                  value="generated"
+                  className="flex items-center gap-2 rounded-xl text-sm font-medium data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm"
+                >
                   <Camera className="h-4 w-4" />
                   Generar Modelo
                 </TabsTrigger>
@@ -277,38 +398,44 @@ export default function OutfitsPage() {
               
               <TabsContent value="existing" className="space-y-4">
                 {models.length > 0 ? (
-                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                    {models.map((model, index) => (
-                      <div
-                        key={model.url}
-                        className={`relative cursor-pointer rounded-lg overflow-hidden border-2 transition-all ${
-                          selectedModel === model.url
-                            ? 'border-primary ring-2 ring-primary/20'
-                            : 'border-transparent hover:border-muted-foreground/20'
-                        }`}
-                        onClick={() => setSelectedModel(model.url)}
-                      >
-                        <img
-                          src={model.url}
-                          alt={`Modelo ${index + 1}`}
-                          className="w-full aspect-[3/4] object-cover"
-                        />
-                        {selectedModel === model.url && (
-                          <div className="absolute top-2 right-2">
-                            <CheckCircle className="h-6 w-6 text-primary bg-white rounded-full" />
+                  <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
+                    {models.map((model, index) => {
+                      const isSelected = selectedModel === model.url
+
+                      return (
+                        <button
+                          type="button"
+                          key={model.url}
+                          onClick={() => setSelectedModel(model.url)}
+                          className={`group relative overflow-hidden rounded-2xl border border-transparent bg-white/80 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 ${
+                            isSelected ? 'border-primary/30 ring-2 ring-primary/30 shadow-lg' : ''
+                          }`}
+                        >
+                          <img
+                            src={model.url}
+                            alt={`Modelo ${index + 1}`}
+                            className="aspect-[3/4] w-full object-cover"
+                          />
+                          <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/40 via-black/10 to-transparent p-2 text-left">
+                            <p className="text-xs font-medium text-white/90">Modelo #{index + 1}</p>
                           </div>
-                        )}
-                      </div>
-                    ))}
+                          {isSelected && (
+                            <div className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-full bg-white shadow-sm">
+                              <CheckCircle className="h-5 w-5 text-primary" />
+                            </div>
+                          )}
+                        </button>
+                      )
+                    })}
                   </div>
                 ) : (
-                  <div className="text-center py-12">
-                    <User className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                    <h3 className="text-lg font-semibold mb-2">No hay modelos disponibles</h3>
-                    <p className="text-muted-foreground mb-4">
-                      Necesitas subir modelos primero para usar esta opción
+                  <div className="rounded-3xl border border-dashed border-primary/20 bg-white/60 p-12 text-center shadow-inner">
+                    <User className="mb-4 h-12 w-12 mx-auto text-primary/60" />
+                    <h3 className="mb-2 text-lg font-semibold text-foreground/90">No hay modelos disponibles</h3>
+                    <p className="mb-5 text-sm text-muted-foreground">
+                      Sube tus modelos para poder seleccionarlos rápidamente desde aquí.
                     </p>
-                    <Button variant="outline">
+                    <Button variant="outline" className="rounded-full border-primary/20 bg-white/80 text-primary hover:bg-primary/10">
                       <Upload className="mr-2 h-4 w-4" />
                       Ir a Modelos
                     </Button>
@@ -318,14 +445,14 @@ export default function OutfitsPage() {
               
               <TabsContent value="generated" className="space-y-4">
                 <div className="grid gap-4">
-                  <div>
-                    <label className="text-sm font-medium mb-2 block">Tono de piel</label>
+                  <div className="space-y-2">
+                    <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground/70">Tono de piel</label>
                     <Select value={modelCharacteristics.skinTone} onValueChange={(value) => 
                       setModelCharacteristics(prev => ({...prev, skinTone: value}))}>
-                      <SelectTrigger>
+                      <SelectTrigger className="rounded-xl border-primary/20 bg-white/80 text-sm">
                         <SelectValue placeholder="Selecciona tono de piel" />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent className="rounded-xl border border-primary/20 bg-white/95 shadow-lg">
                         <SelectItem value="very-light">Muy claro</SelectItem>
                         <SelectItem value="light">Claro</SelectItem>
                         <SelectItem value="medium">Medio</SelectItem>
@@ -337,14 +464,14 @@ export default function OutfitsPage() {
                   </div>
                   
                   <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="text-sm font-medium mb-2 block">Género</label>
+                    <div className="space-y-2">
+                      <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground/70">Género</label>
                       <Select value={modelCharacteristics.gender} onValueChange={(value) => 
                         setModelCharacteristics(prev => ({...prev, gender: value}))}>
-                        <SelectTrigger>
+                        <SelectTrigger className="rounded-xl border-primary/20 bg-white/80 text-sm">
                           <SelectValue placeholder="Género" />
                         </SelectTrigger>
-                        <SelectContent>
+                        <SelectContent className="rounded-xl border border-primary/20 bg-white/95 shadow-lg">
                           <SelectItem value="female">Femenino</SelectItem>
                           <SelectItem value="male">Masculino</SelectItem>
                           <SelectItem value="non-binary">No binario</SelectItem>
@@ -352,14 +479,14 @@ export default function OutfitsPage() {
                       </Select>
                     </div>
                     
-                    <div>
-                      <label className="text-sm font-medium mb-2 block">Edad aproximada</label>
+                    <div className="space-y-2">
+                      <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground/70">Edad aproximada</label>
                       <Select value={modelCharacteristics.age} onValueChange={(value) => 
                         setModelCharacteristics(prev => ({...prev, age: value}))}>
-                        <SelectTrigger>
+                        <SelectTrigger className="rounded-xl border-primary/20 bg-white/80 text-sm">
                           <SelectValue placeholder="Edad" />
                         </SelectTrigger>
-                        <SelectContent>
+                        <SelectContent className="rounded-xl border border-primary/20 bg-white/95 shadow-lg">
                           <SelectItem value="young-adult">Joven adulto (20-30)</SelectItem>
                           <SelectItem value="adult">Adulto (30-45)</SelectItem>
                           <SelectItem value="middle-aged">Mediana edad (45-60)</SelectItem>
@@ -369,14 +496,14 @@ export default function OutfitsPage() {
                     </div>
                   </div>
                   
-                  <div>
-                    <label className="text-sm font-medium mb-2 block">Tipo de cuerpo</label>
+                  <div className="space-y-2">
+                    <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground/70">Tipo de cuerpo</label>
                     <Select value={modelCharacteristics.bodyType} onValueChange={(value) => 
                       setModelCharacteristics(prev => ({...prev, bodyType: value}))}>
-                      <SelectTrigger>
+                      <SelectTrigger className="rounded-xl border-primary/20 bg-white/80 text-sm">
                         <SelectValue placeholder="Selecciona tipo de cuerpo" />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent className="rounded-xl border border-primary/20 bg-white/95 shadow-lg">
                         <SelectItem value="slim">Delgado</SelectItem>
                         <SelectItem value="athletic">Atlético</SelectItem>
                         <SelectItem value="average">Promedio</SelectItem>
@@ -387,11 +514,11 @@ export default function OutfitsPage() {
                   </div>
                 </div>
                 
-                <Alert className="border-amber-200 bg-amber-50">
-                  <Info className="h-4 w-4" />
-                  <AlertDescription className="text-amber-800">
-                    <strong>Próximamente:</strong> La generación de modelos personalizados estará disponible en una próxima actualización.
-                    Por ahora, puedes usar los modelos existentes.
+                <Alert className="border-primary/20 bg-primary/5 text-sm">
+                  <Info className="h-4 w-4 text-primary" />
+                  <AlertDescription className="text-muted-foreground">
+                    <span className="font-semibold text-primary/80">Próximamente:</span> La generación de modelos personalizados estará disponible muy pronto.
+                    Mientras tanto, selecciona un modelo existente para continuar.
                   </AlertDescription>
                 </Alert>
               </TabsContent>
@@ -403,47 +530,49 @@ export default function OutfitsPage() {
         return (
           <div className="space-y-6">
             {garments.length > 0 ? (
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
-                {garments.map((garment, index) => (
-                  <div
-                    key={garment.url}
-                    className={`relative cursor-pointer rounded-lg overflow-hidden border-2 transition-all ${
-                      selectedGarments.includes(garment.url)
-                        ? 'border-primary ring-2 ring-primary/20'
-                        : 'border-transparent hover:border-muted-foreground/20'
-                    }`}
-                    onClick={() => {
-                      setSelectedGarments(prev => 
-                        prev.includes(garment.url)
-                          ? prev.filter(g => g !== garment.url)
-                          : [...prev, garment.url]
-                      )
-                    }}
-                  >
-                    <img
-                      src={garment.url}
-                      alt={`Prenda ${index + 1}`}
-                      className="w-full aspect-square object-cover"
-                    />
-                    {selectedGarments.includes(garment.url) && (
-                      <div className="absolute top-2 right-2">
-                        <CheckCircle className="h-6 w-6 text-primary bg-white rounded-full" />
+              <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
+                {garments.map((garment, index) => {
+                  const isSelected = selectedGarments.includes(garment.url)
+
+                  return (
+                    <button
+                      type="button"
+                      key={garment.url}
+                      onClick={() => {
+                        setSelectedGarments(prev =>
+                          prev.includes(garment.url)
+                            ? prev.filter(g => g !== garment.url)
+                            : [...prev, garment.url]
+                        )
+                      }}
+                      className={`group relative overflow-hidden rounded-2xl border border-transparent bg-white/80 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 ${
+                        isSelected ? 'border-primary/30 ring-2 ring-primary/30 shadow-lg' : ''
+                      }`}
+                    >
+                      <img
+                        src={garment.url}
+                        alt={`Prenda ${index + 1}`}
+                        className="aspect-square w-full object-cover"
+                      />
+                      <div className="absolute inset-x-2 top-2 flex items-center justify-between rounded-full bg-white/80 px-3 py-1 text-xs font-medium text-muted-foreground">
+                        <span>Prenda #{index + 1}</span>
+                        {isSelected && <CheckCircle className="h-4 w-4 text-primary" />}
                       </div>
-                    )}
-                    <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-2">
-                      <p className="text-white text-xs">#{index + 1}</p>
-                    </div>
-                  </div>
-                ))}
+                      <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/40 via-black/10 to-transparent p-2 text-left">
+                        <p className="text-[11px] font-medium uppercase tracking-[0.08em] text-white/80">Toca para seleccionar</p>
+                      </div>
+                    </button>
+                  )
+                })}
               </div>
             ) : (
-              <div className="text-center py-12">
-                <Shirt className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                <h3 className="text-lg font-semibold mb-2">No hay prendas disponibles</h3>
-                <p className="text-muted-foreground mb-4">
-                  Necesitas subir prendas primero para crear outfits
+              <div className="rounded-3xl border border-dashed border-primary/20 bg-white/60 p-12 text-center shadow-inner">
+                <Shirt className="mb-4 h-12 w-12 mx-auto text-primary/60" />
+                <h3 className="mb-2 text-lg font-semibold text-foreground/90">No hay prendas disponibles</h3>
+                <p className="mb-5 text-sm text-muted-foreground">
+                  Sube tus prendas para combinarlas en tus próximos looks.
                 </p>
-                <Button variant="outline">
+                <Button variant="outline" className="rounded-full border-primary/20 bg-white/80 text-primary hover:bg-primary/10">
                   <Upload className="mr-2 h-4 w-4" />
                   Ir a Prendas
                 </Button>
@@ -451,11 +580,10 @@ export default function OutfitsPage() {
             )}
             
             {selectedGarments.length > 0 && (
-              <Alert className="border-blue-200 bg-blue-50">
-                <Info className="h-4 w-4 text-blue-600" />
-                <AlertDescription className="text-blue-800">
-                  {selectedGarments.length} prenda{selectedGarments.length !== 1 ? 's' : ''} seleccionada{selectedGarments.length !== 1 ? 's' : ''}. 
-                  Puedes elegir múltiples prendas para crear outfits más completos.
+              <Alert className="border-primary/20 bg-primary/5 text-sm">
+                <Info className="h-4 w-4 text-primary" />
+                <AlertDescription className="text-muted-foreground">
+                  {selectedGarments.length} prenda{selectedGarments.length !== 1 ? 's' : ''} seleccionada{selectedGarments.length !== 1 ? 's' : ''}. Añade varias piezas para crear outfits más completos.
                 </AlertDescription>
               </Alert>
             )}
@@ -465,75 +593,76 @@ export default function OutfitsPage() {
       case 'style':
         return (
           <div className="space-y-6">
-            <div className="flex items-center justify-between p-4 border rounded-lg">
-              <div className="space-y-0.5">
-                <label className="text-base font-medium">Configuración avanzada de estilo</label>
-                <p className="text-sm text-muted-foreground">
-                  Personaliza el estilo, temporada y preferencias del outfit
+            <div className="flex items-center justify-between rounded-2xl border border-primary/20 bg-white/70 px-5 py-4 shadow-inner">
+              <div className="space-y-1">
+                <label className="text-sm font-semibold text-foreground/90">Configuración avanzada de estilo</label>
+                <p className="text-xs text-muted-foreground">
+                  Personaliza el estilo, temporada y los matices del outfit.
                 </p>
               </div>
-              <Switch 
-                checked={useAdvancedStyle} 
+              <Switch
+                checked={useAdvancedStyle}
                 onCheckedChange={setUseAdvancedStyle}
               />
             </div>
             
             {useAdvancedStyle && (
-              <div className="grid gap-6">
-              <div>
-                <label className="text-sm font-medium mb-2 block">Estilo de outfit</label>
-                <Select value={stylePreferences.style} onValueChange={(value) => 
-                  setStylePreferences(prev => ({...prev, style: value}))}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecciona un estilo" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="casual">Casual</SelectItem>
-                    <SelectItem value="formal">Formal</SelectItem>
-                    <SelectItem value="business">Empresarial</SelectItem>
-                    <SelectItem value="street">Urbano</SelectItem>
-                    <SelectItem value="bohemian">Bohemio</SelectItem>
-                    <SelectItem value="minimalist">Minimalista</SelectItem>
-                    <SelectItem value="vintage">Vintage</SelectItem>
-                    <SelectItem value="sporty">Deportivo</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div>
-                <label className="text-sm font-medium mb-2 block">Temporada</label>
-                <Select value={stylePreferences.season} onValueChange={(value) => 
-                  setStylePreferences(prev => ({...prev, season: value}))}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecciona temporada" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="any">Cualquier temporada</SelectItem>
-                    <SelectItem value="spring">Primavera</SelectItem>
-                    <SelectItem value="summer">Verano</SelectItem>
-                    <SelectItem value="autumn">Otoño</SelectItem>
-                    <SelectItem value="winter">Invierno</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              
+              <div className="grid gap-6 rounded-2xl border border-primary/20 bg-white/70 p-6 shadow-inner">
+                <div className="space-y-2">
+                  <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground/70">Estilo de outfit</label>
+                  <Select value={stylePreferences.style} onValueChange={(value) =>
+                    setStylePreferences(prev => ({...prev, style: value}))}>
+                    <SelectTrigger className="rounded-xl border-primary/20 bg-white/80 text-sm">
+                      <SelectValue placeholder="Selecciona un estilo" />
+                    </SelectTrigger>
+                    <SelectContent className="rounded-xl border border-primary/20 bg-white/95 shadow-lg">
+                      <SelectItem value="casual">Casual</SelectItem>
+                      <SelectItem value="formal">Formal</SelectItem>
+                      <SelectItem value="business">Empresarial</SelectItem>
+                      <SelectItem value="street">Urbano</SelectItem>
+                      <SelectItem value="bohemian">Bohemio</SelectItem>
+                      <SelectItem value="minimalist">Minimalista</SelectItem>
+                      <SelectItem value="vintage">Vintage</SelectItem>
+                      <SelectItem value="sporty">Deportivo</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground/70">Temporada</label>
+                  <Select value={stylePreferences.season} onValueChange={(value) =>
+                    setStylePreferences(prev => ({...prev, season: value}))}>
+                    <SelectTrigger className="rounded-xl border-primary/20 bg-white/80 text-sm">
+                      <SelectValue placeholder="Selecciona temporada" />
+                    </SelectTrigger>
+                    <SelectContent className="rounded-xl border border-primary/20 bg-white/95 shadow-lg">
+                      <SelectItem value="any">Cualquier temporada</SelectItem>
+                      <SelectItem value="spring">Primavera</SelectItem>
+                      <SelectItem value="summer">Verano</SelectItem>
+                      <SelectItem value="autumn">Otoño</SelectItem>
+                      <SelectItem value="winter">Invierno</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
             )}
             
-            <Card className="border-purple-200 bg-purple-50">
-              <CardContent className="pt-4">
+            <Card className="border-none bg-gradient-to-br from-primary/10 via-white to-accent/20 shadow-sm">
+              <CardContent className="flex flex-col gap-4 px-6 py-5">
                 <div className="flex items-start gap-3">
-                  <Palette className="h-5 w-5 text-purple-600 mt-0.5" />
-                  <div>
-                    <h4 className="font-medium text-purple-900 mb-1">Resumen de tu outfit</h4>
-                    <div className="text-sm text-purple-800 space-y-1">
+                  <div className="rounded-xl bg-white/80 p-2.5 shadow-inner">
+                    <Palette className="h-5 w-5 text-primary" />
+                  </div>
+                  <div className="space-y-2">
+                    <h4 className="text-sm font-semibold text-foreground/90">Resumen de tu outfit</h4>
+                    <div className="space-y-1 text-sm text-muted-foreground">
                       <p>• Modelo: {selectedModelType === 'existing' ? 'Existente seleccionado' : 'Generado por IA'}</p>
                       <p>• Prendas: {selectedGarments.length} seleccionada{selectedGarments.length !== 1 ? 's' : ''}</p>
                       {useAdvancedStyle && <p>• Estilo: {stylePreferences.style}</p>}
                       {useAdvancedStyle && <p>• Temporada: {stylePreferences.season}</p>}
                       <p>• Imágenes: {variants === 1 ? '1 imagen original' : `${variants} variantes`}</p>
                       {variants > 1 && variantConfigs.length > 0 && (
-                        <div className="ml-4 text-xs space-y-0.5">
+                        <div className="ml-4 space-y-0.5 text-xs">
                           {variantConfigs.map(config => (
                             <p key={config.id}>
                               - Imagen {config.id}: {VARIANT_OPTIONS[config.type].label}
@@ -552,38 +681,38 @@ export default function OutfitsPage() {
         
       case 'generate':
         return (
-          <div className="space-y-6 text-center py-12">
-            <div className="space-y-4">
-              <div className="p-4 bg-primary/10 rounded-full w-24 h-24 mx-auto flex items-center justify-center">
-                <Wand2 className={`h-12 w-12 text-primary ${loading ? 'animate-pulse' : ''}`} />
-              </div>
-              <div>
-                <h3 className="text-2xl font-bold mb-2">
-                  {loading ? 'Generando tu outfit...' : 'Todo listo para generar'}
-                </h3>
-                <p className="text-muted-foreground">
-                  {loading 
-                    ? 'La IA está trabajando en crear tu outfit perfecto'
-                    : 'Haz clic en generar para crear tu outfit con inteligencia artificial'}
+          <div className="space-y-8 rounded-3xl border border-primary/10 bg-white/70 p-10 text-center shadow-inner">
+            <div className="mx-auto flex h-24 w-24 items-center justify-center rounded-3xl bg-gradient-to-br from-primary/20 via-primary/10 to-primary/5">
+              <Wand2 className={`h-12 w-12 text-primary ${loading ? 'animate-pulse' : ''}`} />
+            </div>
+            <div className="space-y-2">
+              <h3 className="text-2xl font-semibold text-foreground/90">
+                {loading ? 'Generando tu outfit...' : 'Todo listo para generar'}
+              </h3>
+              <p className="mx-auto max-w-md text-sm text-muted-foreground">
+                {loading
+                  ? 'La inteligencia artificial está creando combinaciones pulidas para tu outfit.'
+                  : 'Haz clic en generar para obtener un conjunto a medida con detalles cuidados.'}
+              </p>
+            </div>
+
+            {loading && (
+              <div className="mx-auto flex max-w-md flex-col gap-2 text-left">
+                <Progress value={generationProgress} className="h-2 rounded-full bg-primary/10" />
+                <p className="text-xs font-medium text-muted-foreground">
+                  {Math.round(generationProgress)}% completado
                 </p>
               </div>
-              
-              {loading && (
-                <div className="space-y-2 max-w-md mx-auto">
-                  <Progress value={generationProgress} className="h-2" />
-                  <p className="text-sm text-muted-foreground">
-                    {Math.round(generationProgress)}% completado
-                  </p>
-                </div>
-              )}
-              
-              {error && (
-                <Alert variant="destructive" className="max-w-md mx-auto text-left">
-                  <AlertTriangle className="h-4 w-4" />
-                  <AlertDescription>{error}</AlertDescription>
-                </Alert>
-              )}
-            </div>
+            )}
+
+            {error && (
+              <Alert className="mx-auto max-w-md border-destructive/30 bg-destructive/5 text-left text-sm">
+                <AlertTriangle className="h-4 w-4 text-destructive" />
+                <AlertDescription className="text-destructive">
+                  {error}
+                </AlertDescription>
+              </Alert>
+            )}
           </div>
         )
         
@@ -592,63 +721,108 @@ export default function OutfitsPage() {
           <div className="space-y-6">
             {outputs.length > 0 ? (
               <>
-                <div className="text-center">
-                  <h3 className="text-2xl font-bold mb-2">¡Outfits generados con éxito!</h3>
-                  <p className="text-muted-foreground">
-                    Aquí tienes {outputs.length} variante{outputs.length !== 1 ? 's' : ''} de tu outfit
+                <div className="space-y-2 text-center">
+                  <h3 className="text-2xl font-semibold text-foreground/90">¡Outfits generados con éxito!</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Aquí tienes {outputs.length} variante{outputs.length !== 1 ? 's' : ''} perfectamente curada{outputs.length !== 1 ? 's' : ''} para tu look.
                   </p>
                 </div>
+
+                {downloadError && (
+                  <Alert variant="destructive" className="mx-auto max-w-2xl text-left text-sm">
+                    <AlertTriangle className="h-4 w-4" />
+                    <AlertDescription>{downloadError}</AlertDescription>
+                  </Alert>
+                )}
                 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
                   {outputs.map((url, index) => (
-                    <Card key={url} className="overflow-hidden hover:shadow-lg transition-shadow">
-                      <div className="aspect-[3/4] relative">
+                    <Card
+                      key={url}
+                      onClick={() => handleOpenPreview(url, index)}
+                      onKeyDown={(event) => {
+                        if (event.key === 'Enter' || event.key === ' ') {
+                          event.preventDefault()
+                          handleOpenPreview(url, index)
+                        }
+                      }}
+                      role="button"
+                      tabIndex={0}
+                      className="group overflow-hidden rounded-3xl border border-transparent bg-white/80 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-primary/20 hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-primary/40 cursor-zoom-in"
+                    >
+                      <div className="relative aspect-[3/4] overflow-hidden">
                         <img 
                           src={url} 
                           alt={`Outfit ${index + 1}`}
-                          className="w-full h-full object-cover" 
+                          className="h-full w-full object-cover transition duration-500 group-hover:scale-105" 
                         />
-                        <div className="absolute top-2 right-2">
-                          <Badge className="bg-black/50 text-white">
+                        <div className="absolute right-3 top-3">
+                          <Badge className="rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
                             #{index + 1}
                           </Badge>
                         </div>
                       </div>
-                      <CardContent className="p-4">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <h4 className="font-medium">Variante {index + 1}</h4>
-                            <p className="text-sm text-muted-foreground">
-                              Estilo {stylePreferences.style}
-                            </p>
-                          </div>
-                          <Button size="sm" variant="outline">
-                            <Star className="h-4 w-4" />
-                          </Button>
+                      <CardContent className="flex items-center justify-between gap-4 p-5">
+                        <div className="space-y-1">
+                          <h4 className="text-base font-medium text-foreground/90">Variante {index + 1}</h4>
+                          <p className="text-xs uppercase tracking-[0.12em] text-muted-foreground/70">
+                            Estilo {stylePreferences.style}
+                          </p>
                         </div>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={(event) => {
+                            event.stopPropagation()
+                          }}
+                          className="rounded-full border-primary/20 bg-white/80 text-primary transition hover:bg-primary/10"
+                        >
+                          <Star className="h-4 w-4" />
+                        </Button>
                       </CardContent>
                     </Card>
                   ))}
                 </div>
                 
-                <div className="flex justify-center gap-4">
-                  <Button variant="outline" onClick={resetWizard}>
+                <div className="flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
+                  <Button
+                    variant="outline"
+                    onClick={resetWizard}
+                    className="rounded-full border-primary/20 bg-white/80 px-6 text-primary hover:bg-primary/10"
+                  >
                     Crear Nuevo Outfit
                   </Button>
-                  <Button>
-                    <Upload className="mr-2 h-4 w-4" />
-                    Descargar Todo
+                  <Button
+                    onClick={handleDownloadAll}
+                    disabled={downloadingAll}
+                    className="rounded-full bg-primary px-6 py-2 text-sm font-semibold text-primary-foreground shadow-lg transition hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-70"
+                  >
+                    {downloadingAll ? (
+                      <>
+                        <div className="mr-2 h-4 w-4 animate-spin rounded-full border-[2px] border-primary-foreground border-t-transparent" />
+                        Preparando descarga...
+                      </>
+                    ) : (
+                      <>
+                        <Upload className="mr-2 h-4 w-4" />
+                        Descargar Todo
+                      </>
+                    )}
                   </Button>
                 </div>
               </>
             ) : (
-              <div className="text-center py-12">
-                <AlertTriangle className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                <h3 className="text-lg font-semibold mb-2">No se pudieron generar outfits</h3>
-                <p className="text-muted-foreground mb-4">
-                  Hubo un problema durante la generación
+              <div className="rounded-3xl border border-dashed border-primary/20 bg-white/70 p-12 text-center shadow-inner">
+                <AlertTriangle className="mb-4 h-12 w-12 mx-auto text-destructive" />
+                <h3 className="mb-2 text-lg font-semibold text-foreground/90">No se pudieron generar outfits</h3>
+                <p className="mb-5 text-sm text-muted-foreground">
+                  Hubo un problema durante la generación. Revisa las selecciones y vuelve a intentarlo.
                 </p>
-                <Button variant="outline" onClick={() => setCurrentStep('style')}>
+                <Button
+                  variant="outline"
+                  onClick={() => setCurrentStep('style')}
+                  className="rounded-full border-primary/20 bg-white/80 text-primary hover:bg-primary/10"
+                >
                   Intentar de nuevo
                 </Button>
               </div>
@@ -658,248 +832,317 @@ export default function OutfitsPage() {
     }
   }
 
+  const showVariantSettings = currentStep === 'style' || currentStep === 'generate' || currentStep === 'results'
+
   return (
     <TooltipProvider>
-      <div className="space-y-8">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-purple-100 rounded-full">
-              <Wand2 className="h-6 w-6 text-purple-600" />
-            </div>
-            <div>
-              <h1 className="text-3xl font-bold">Crear Outfit</h1>
-              <p className="text-muted-foreground">Asistente paso a paso para generar looks únicos con IA</p>
-            </div>
-          </div>
-          <Button variant="outline" size="sm" onClick={resetWizard}>
-            Reiniciar
-          </Button>
-        </div>
-
-        {/* Progress Stepper */}
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              {steps.map((step, index) => {
-                const isActive = step.step === currentStep
-                const isCompleted = completedSteps.includes(step.step)
-                const IconComponent = step.icon
-                
-                return (
-                  <div key={step.step} className="flex items-center">
-                    <div className="flex flex-col items-center">
-                      <div className={`p-3 rounded-full border-2 transition-all ${
-                        isActive 
-                          ? 'border-primary bg-primary text-white' 
-                          : isCompleted 
-                            ? 'border-green-500 bg-green-500 text-white'
-                            : 'border-muted-foreground/30 bg-muted text-muted-foreground'
-                      }`}>
-                        {isCompleted ? (
-                          <CheckCircle className="h-5 w-5" />
-                        ) : (
-                          <IconComponent className="h-5 w-5" />
-                        )}
-                      </div>
-                      <div className="mt-2 text-center">
-                        <p className={`text-sm font-medium ${
-                          isActive ? 'text-primary' : isCompleted ? 'text-green-600' : 'text-muted-foreground'
-                        }`}>
-                          {step.title}
-                        </p>
-                        <p className="text-xs text-muted-foreground hidden sm:block">
-                          {step.description}
-                        </p>
-                      </div>
-                    </div>
-                    {index < steps.length - 1 && (
-                      <div className="flex-1 h-px bg-muted-foreground/30 mx-4" />
-                    )}
-                  </div>
-                )
-              })}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Configuración de Variantes */}
-        {(currentStep === 'style' || currentStep === 'generate' || currentStep === 'results') && (
-          <Card className="border-blue-200 bg-blue-50">
-            <CardContent className="pt-6">
-              <div className="flex items-start gap-4">
-                <div className="p-2 bg-blue-100 rounded-full">
-                  <Camera className="h-5 w-5 text-blue-600" />
+      <div className="mx-auto flex w-full max-w-6xl flex-col gap-8">
+        <div className="rounded-3xl border border-white/60 bg-white/80 p-6 shadow-[0_24px_60px_-32px_rgba(30,64,175,0.55)] backdrop-blur-2xl sm:p-10">
+          <div className="space-y-10">
+            {/* Header */}
+            <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex items-center gap-4">
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-primary/20 via-primary/10 to-primary/5 shadow-inner">
+                  <Wand2 className="h-5 w-5 text-primary" />
                 </div>
-                <div className="flex-1">
-                  <h3 className="font-semibold text-blue-900 mb-2">Configuración de Variantes</h3>
-                  <p className="text-sm text-blue-800 mb-4">
-                    Controla cuántas imágenes generar y qué tipo de variaciones quieres
+                <div>
+                  <h1 className="text-3xl font-semibold tracking-tight text-foreground/90">Crear Outfit</h1>
+                  <p className="text-sm text-muted-foreground">
+                    Asistente guiado con IA para construir looks modernos y minimalistas
                   </p>
-                  
-                  {/* Control de número de variantes */}
-                  <div className="mb-4">
-                    <div className="flex items-center gap-3 mb-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => updateVariantCount(Math.max(1, variants - 1))}
-                        disabled={variants <= 1}
-                        className="h-8 w-8 p-0"
-                      >
-                        -
-                      </Button>
-                      <span className="text-sm font-medium min-w-[80px] text-center">
-                        {variants} imagen{variants !== 1 ? 'es' : ''}
-                      </span>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => updateVariantCount(Math.min(4, variants + 1))}
-                        disabled={variants >= 4}
-                        className="h-8 w-8 p-0"
-                      >
-                        +
-                      </Button>
-                      <Badge variant="outline" className="ml-2">
-                        {variants === 1 ? 'Básico' : `${variants} variantes`}
-                      </Badge>
-                    </div>
-                    <p className="text-xs text-blue-700">
-                      {variants === 1 
-                        ? 'Una imagen con las prendas exactas' 
-                        : `${variants} imágenes con variaciones controladas`
-                      }
-                    </p>
-                  </div>
-
-                  {/* Configuración de variantes adicionales */}
-                  {variants > 1 && (
-                    <div className="space-y-3">
-                      <div className="text-xs font-medium text-blue-700 mb-2">
-                        Tipos de variación:
-                      </div>
-                      
-                      {/* Variante 1 siempre es la original */}
-                      <div className="flex items-center gap-3 p-2 bg-blue-100/50 rounded-lg">
-                        <span className="text-sm font-medium w-16">Imagen 1:</span>
-                        <span className="text-sm text-blue-700">Original (frontal, iluminación neutral)</span>
-                        <Badge variant="secondary" className="ml-auto">📸</Badge>
-                      </div>
-                      
-                      {/* Variantes configurables */}
-                      {variantConfigs.map((config, index) => (
-                        <div key={config.id} className="flex items-center gap-3 p-2 border border-blue-200 rounded-lg bg-white">
-                          <span className="text-sm font-medium w-16">Imagen {config.id}:</span>
-                          <Select
-                            value={config.type}
-                            onValueChange={(value: VariantType) => updateVariantConfig(config.id, value)}
-                          >
-                            <SelectTrigger className="flex-1">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {Object.entries(VARIANT_OPTIONS).map(([key, option]) => (
-                                <SelectItem key={key} value={key}>
-                                  <div className="flex items-center gap-2">
-                                    <span>{option.icon}</span>
-                                    <span>{option.label}</span>
-                                  </div>
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          <Tooltip>
-                            <TooltipTrigger>
-                              <Info className="h-4 w-4 text-muted-foreground" />
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              <p className="max-w-[200px]">
-                                {VARIANT_OPTIONS[config.type].description}
-                              </p>
-                            </TooltipContent>
-                          </Tooltip>
-                        </div>
-                      ))}
-                    </div>
-                  )}
                 </div>
               </div>
-            </CardContent>
-          </Card>
-        )}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={resetWizard}
+                className="rounded-full border-primary/20 bg-white/80 px-5 text-primary shadow-sm transition hover:border-primary/30 hover:bg-primary/10"
+              >
+                Reiniciar
+              </Button>
+            </div>
 
-        {/* Step Content */}
-        <Card className="min-h-[400px]">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              {React.createElement(steps.find(s => s.step === currentStep)?.icon || Wand2, { className: "h-5 w-5" })}
-              {steps.find(s => s.step === currentStep)?.title}
-            </CardTitle>
-            <CardDescription>
-              {steps.find(s => s.step === currentStep)?.description}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {renderStepContent()}
-          </CardContent>
-        </Card>
+            {/* Progress Stepper */}
+            <Card className="border-none bg-white/80 shadow-none backdrop-blur">
+              <CardContent className="flex flex-col gap-6 px-4 py-6 sm:px-6">
+                <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
+                  {steps.map((step, index) => {
+                    const isActive = step.step === currentStep
+                    const isCompleted = completedSteps.includes(step.step)
+                    const IconComponent = step.icon
 
-        {/* Navigation */}
-        <div className="flex justify-between">
-          <Button 
-            variant="outline" 
-            onClick={prevStep}
-            disabled={currentStep === 'model' || loading}
-            className="flex items-center gap-2"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Anterior
-          </Button>
-          
-          <div className="flex gap-2">
-            {currentStep === 'style' ? (
-              <Button 
-                onClick={generateOutfit}
-                disabled={!canProceed() || loading}
-                className="flex items-center gap-2"
-                size="lg"
+                    return (
+                      <div key={step.step} className="flex flex-1 flex-col items-center gap-4 text-center md:min-w-[160px] md:flex-row md:items-center md:gap-5 md:text-left">
+                        <div className="flex flex-col items-center gap-3 md:flex-row md:items-center md:gap-3">
+                          <div
+                            className={`flex h-12 w-12 items-center justify-center rounded-2xl border text-sm font-medium transition-all duration-300 ${
+                              isActive
+                                ? 'border-primary/20 bg-primary text-white shadow-lg'
+                                : isCompleted
+                                  ? 'border-emerald-200 bg-emerald-100 text-emerald-700 shadow-inner'
+                                  : 'border-border/70 bg-white text-muted-foreground shadow-inner'
+                            }`}
+                          >
+                            {isCompleted ? (
+                              <CheckCircle className="h-5 w-5" />
+                            ) : (
+                              <IconComponent className="h-5 w-5" />
+                            )}
+                          </div>
+                          <div className="space-y-1">
+                            <p
+                              className={`text-sm font-medium ${
+                                isActive
+                                  ? 'text-primary'
+                                  : isCompleted
+                                    ? 'text-emerald-600'
+                                    : 'text-muted-foreground'
+                              }`}
+                            >
+                              {step.title}
+                            </p>
+                            <p className="text-xs text-muted-foreground/80">
+                              {step.description}
+                            </p>
+                          </div>
+                        </div>
+                        {index < steps.length - 1 && (
+                          <div className="hidden flex-1 md:block">
+                            <div className="h-px w-full rounded-full bg-gradient-to-r from-transparent via-primary/25 to-transparent" />
+                          </div>
+                        )}
+                      </div>
+                    )
+                  })}
+                </div>
+              </CardContent>
+            </Card>
+
+            <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
+              <Card className="order-1 border-none bg-white/90 shadow-xl  backdrop-blur">
+                <CardHeader className="space-y-2 pb-4">
+                  <CardTitle className="flex items-center gap-3 text-xl font-semibold text-foreground/90">
+                    {React.createElement(steps.find(s => s.step === currentStep)?.icon || Wand2, { className: 'h-5 w-5 text-primary' })}
+                    {steps.find(s => s.step === currentStep)?.title}
+                  </CardTitle>
+                  <CardDescription className="text-sm text-muted-foreground/80">
+                    {steps.find(s => s.step === currentStep)?.description}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="px-6 pb-6">
+                  <div key={currentStep} className="wizard-animate space-y-6">
+                    {renderStepContent()}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {showVariantSettings && (
+                <Card className="order-2 border-none bg-gradient-to-br from-primary/10 via-white to-blue-50/70 shadow-md  backdrop-blur-sm">
+                  <CardContent className="flex flex-col gap-5 px-5 py-6">
+                    <div className="flex items-start gap-3">
+                      <div className="rounded-xl bg-white/80 p-3 shadow-inner">
+                        <Camera className="h-5 w-5 text-primary" />
+                      </div>
+                      <div className="space-y-1">
+                        <h3 className="text-sm font-semibold text-primary/90">Configuración de Variantes</h3>
+                        <p className="text-xs text-muted-foreground">
+                          Controla cuántas imágenes generará la IA y cómo variará cada una.
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="rounded-2xl border border-primary/20 bg-white/80 p-4 shadow-inner">
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-2">
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            onClick={() => updateVariantCount(Math.max(1, variants - 1))}
+                            disabled={variants <= 1}
+                            className="h-9 w-9 rounded-full border-primary/20 text-primary hover:bg-primary/10"
+                          >
+                            -
+                          </Button>
+                          <span className="text-sm font-medium text-foreground/90">
+                            {variants} imagen{variants !== 1 ? 'es' : ''}
+                          </span>
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            onClick={() => updateVariantCount(Math.min(4, variants + 1))}
+                            disabled={variants >= 4}
+                            className="h-9 w-9 rounded-full border-primary/20 text-primary hover:bg-primary/10"
+                          >
+                            +
+                          </Button>
+                        </div>
+                        <Badge className="rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
+                          {variants === 1 ? 'Básico' : `${variants} variantes`}
+                        </Badge>
+                      </div>
+                      <p className="mt-2 text-xs text-muted-foreground">
+                        {variants === 1
+                          ? 'Una sola imagen cuidando la composición original.'
+                          : `${variants} imágenes con variaciones delicadas y controladas.`}
+                      </p>
+                    </div>
+
+                    {variants > 1 && (
+                      <div className="space-y-3">
+                        <div className="rounded-xl border border-primary/20 bg-white/70 p-3 text-xs font-medium text-muted-foreground">
+                          Imagen 1: <span className="text-foreground/80">Original (frontal, iluminación neutral)</span>
+                        </div>
+                        {variantConfigs.map((config) => (
+                          <div key={config.id} className="grid gap-3 rounded-2xl border border-primary/20 bg-white/90 p-3 shadow-sm">
+                            <div className="flex items-center justify-between text-sm font-medium text-foreground/80">
+                              <span>Imagen {config.id}</span>
+                              <Badge className="rounded-full bg-primary/10 px-2 py-0.5 text-[11px] text-primary">
+                                {VARIANT_OPTIONS[config.type].icon}
+                              </Badge>
+                            </div>
+                            <Select
+                              value={config.type}
+                              onValueChange={(value: VariantType) => updateVariantConfig(config.id, value)}
+                            >
+                              <SelectTrigger className="rounded-xl border-primary/20 bg-white/70 text-sm">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent className="rounded-xl border border-primary/20 bg-white/95 shadow-lg">
+                                {Object.entries(VARIANT_OPTIONS).map(([key, option]) => (
+                                  <SelectItem key={key} value={key}>
+                                    <div className="flex items-center gap-2">
+                                      <span>{option.icon}</span>
+                                      <span>{option.label}</span>
+                                    </div>
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <Tooltip>
+                              <TooltipTrigger className="flex items-center gap-2 text-xs text-muted-foreground hover:text-primary">
+                                <Info className="h-4 w-4" />
+                                Detalles de la variación
+                              </TooltipTrigger>
+                              <TooltipContent className="max-w-xs rounded-xl border border-primary/10 bg-white/95 text-xs text-muted-foreground">
+                                {VARIANT_OPTIONS[config.type].description}
+                              </TooltipContent>
+                            </Tooltip>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+
+            <div className="flex flex-col gap-4 border-t border-primary/10 pt-6 sm:flex-row sm:items-center sm:justify-between">
+              <Button
+                variant="outline"
+                onClick={prevStep}
+                disabled={currentStep === 'model' || loading}
+                className="flex items-center gap-2 rounded-full border-primary/20 bg-white/80 px-5 text-primary shadow-sm transition hover:border-primary/30 hover:bg-primary/10"
               >
-                <Wand2 className="h-4 w-4" />
-                Generar Outfit
+                <ArrowLeft className="h-4 w-4" />
+                Anterior
               </Button>
-            ) : currentStep === 'generate' ? (
-              <Button 
-                onClick={generateOutfit}
-                disabled={loading}
-                className="flex items-center gap-2"
-                size="lg"
-              >
-                {loading ? (
-                  <>
-                    <div className="animate-spin mr-2 h-4 w-4 border-2 border-current border-t-transparent rounded-full" />
-                    Generando...
-                  </>
-                ) : (
-                  <>
-                    <Zap className="h-4 w-4" />
-                    Comenzar Generación
-                  </>
-                )}
-              </Button>
-            ) : currentStep !== 'results' ? (
-              <Button 
-                onClick={nextStep}
-                disabled={!canProceed() || loading}
-                className="flex items-center gap-2"
-              >
-                Continuar
-                <ArrowRight className="h-4 w-4" />
-              </Button>
-            ) : null}
+
+              <div className="flex flex-wrap justify-end gap-2">
+                {currentStep === 'style' ? (
+                  <Button
+                    onClick={generateOutfit}
+                    disabled={!canProceed() || loading}
+                    className="flex items-center gap-2 rounded-full bg-primary px-6 py-2 text-sm font-semibold text-primary-foreground shadow-lg transition hover:shadow-xl"
+                    size="lg"
+                  >
+                    <Wand2 className="h-4 w-4" />
+                    Generar Outfit
+                  </Button>
+                ) : currentStep === 'generate' ? (
+                  <Button
+                    onClick={generateOutfit}
+                    disabled={loading}
+                    className="flex items-center gap-2 rounded-full bg-primary px-6 py-2 text-sm font-semibold text-primary-foreground shadow-lg transition hover:shadow-xl"
+                    size="lg"
+                  >
+                    {loading ? (
+                      <>
+                        <div className="mr-2 h-4 w-4 animate-spin rounded-full border-[2px] border-current border-t-transparent" />
+                        Generando...
+                      </>
+                    ) : (
+                      <>
+                        <Zap className="h-4 w-4" />
+                        Comenzar Generación
+                      </>
+                    )}
+                  </Button>
+                ) : currentStep !== 'results' ? (
+                  <Button
+                    onClick={nextStep}
+                    disabled={!canProceed() || loading}
+                    className="flex items-center gap-2 rounded-full bg-primary px-6 py-2 text-sm font-semibold text-primary-foreground shadow-lg transition hover:shadow-xl"
+                  >
+                    Continuar
+                    <ArrowRight className="h-4 w-4" />
+                  </Button>
+                ) : null}
+              </div>
+            </div>
           </div>
         </div>
       </div>
+      <Dialog open={isPreviewOpen} onOpenChange={handlePreviewChange}>
+        <DialogContent className="max-w-4xl overflow-hidden border-none bg-white/90 p-0 shadow-2xl">
+          {previewUrl && (
+            <div className="flex flex-col">
+              <DialogHeader className="space-y-1 px-6 pt-6">
+                <DialogTitle className="text-xl font-semibold text-foreground/90">
+                  Variante {(previewIndex ?? 0) + 1}
+                </DialogTitle>
+                <p className="text-sm text-muted-foreground">
+                  Observa la propuesta en grande y guárdala cuando quieras.
+                </p>
+              </DialogHeader>
+              <div className="flex max-h-[70vh] items-center justify-center bg-gradient-to-br from-primary/5 via-white to-white px-4 py-6">
+                <img
+                  src={previewUrl}
+                  alt={`Vista previa outfit ${(previewIndex ?? 0) + 1}`}
+                  className="max-h-[64vh] w-full rounded-2xl border border-white/70 object-contain shadow-inner"
+                />
+              </div>
+              <div className="flex flex-col gap-3 border-t border-primary/10 bg-white/95 px-6 py-4 text-sm sm:flex-row sm:items-center sm:justify-between">
+                <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground">
+                  Estilo {stylePreferences.style}
+                </p>
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
+                  <Button
+                    variant="outline"
+                    onClick={handleOpenImageInNewTab}
+                    className="rounded-full border-primary/20 bg-white/80 text-primary hover:bg-primary/10"
+                  >
+                    Abrir en pestaña nueva
+                  </Button>
+                  <Button
+                    onClick={handleDownloadSingle}
+                    disabled={downloadingSingle}
+                    className="rounded-full bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground shadow-md transition hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-70"
+                  >
+                    {downloadingSingle ? (
+                      <>
+                        <div className="mr-2 h-4 w-4 animate-spin rounded-full border-[2px] border-primary-foreground border-t-transparent" />
+                        Descargando...
+                      </>
+                    ) : (
+                      'Descargar imagen'
+                    )}
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </TooltipProvider>
   )
 }
