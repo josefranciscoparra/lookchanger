@@ -9,7 +9,8 @@ import {
   Wand2, 
   Home,
   Settings,
-  HelpCircle
+  HelpCircle,
+  Image
 } from "lucide-react"
 
 import {
@@ -48,6 +49,11 @@ const menuItems = [
     title: "Crear Outfit",
     url: "/outfits",
     icon: Wand2,
+  },
+  {
+    title: "Mis Imágenes",
+    url: "/gallery",
+    icon: Image,
   },
 ]
 

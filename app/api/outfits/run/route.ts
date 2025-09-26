@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { generateLook } from '@/lib/gemini'
+import { createOutfitJob, updateJobStatus, createOutput } from '@/lib/database'
+import { saveGeneratedImageToStorage } from '@/lib/storage'
 
 export const runtime = 'nodejs'
 
@@ -28,6 +30,13 @@ export async function POST(req: NextRequest) {
 
     console.log(`Generando ${variants} variantes con ${modelUrls.length} modelos y ${garmentUrls.length} prendas`)
     
+    // Crear job en la base de datos
+    const jobId = await createOutfitJob(
+      modelUrls, 
+      garmentUrls, 
+      useAdvancedStyle ? style : undefined
+    )
+    
     const outputs = await generateLook({ 
       modelUrls, 
       garmentUrls, 
@@ -37,12 +46,42 @@ export async function POST(req: NextRequest) {
     })
     
     if (!outputs.length) {
+      // Marcar job como fallido si no hay outputs
+      if (jobId) {
+        await updateJobStatus(jobId, 'failed')
+      }
       return NextResponse.json({ 
         error: 'No se pudieron generar imágenes. Verifica tu API key de Gemini' 
       }, { status: 500 })
     }
     
-    return NextResponse.json({ outputs })
+    // Guardar imágenes generadas en Storage y crear outputs en DB
+    const savedOutputs = []
+    if (jobId) {
+      for (let i = 0; i < outputs.length; i++) {
+        const imageUrl = outputs[i]
+        
+        // Guardar imagen en Storage
+        const savedImageUrl = await saveGeneratedImageToStorage(imageUrl, jobId, i)
+        const finalUrl = savedImageUrl || imageUrl // Fallback a original si falla el guardado
+        
+        // Crear output en DB
+        await createOutput(jobId, finalUrl, { 
+          variant_index: i, 
+          original_data_url: imageUrl 
+        })
+        
+        savedOutputs.push(finalUrl)
+      }
+      
+      // Marcar job como completado
+      await updateJobStatus(jobId, 'completed')
+    }
+    
+    return NextResponse.json({ 
+      outputs: savedOutputs.length > 0 ? savedOutputs : outputs,
+      jobId 
+    })
   } catch (error) {
     console.error('Error generando look:', error)
     return NextResponse.json({ 

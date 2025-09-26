@@ -63,3 +63,42 @@ export async function saveFilesToTmp(files: File[]): Promise<UploadResult> {
 
   return { urls }
 }
+
+export async function saveGeneratedImageToStorage(imageDataUrl: string, jobId: string, variantIndex: number): Promise<string | null> {
+  if (!supabase) {
+    console.log('[storage] Supabase no configurado, retornando data URL original')
+    return imageDataUrl
+  }
+  
+  try {
+    // Convertir data URL a blob
+    const response = await fetch(imageDataUrl)
+    const blob = await response.blob()
+    
+    // Generar nombre único para la imagen
+    const fileName = `generated/${jobId}/variant-${variantIndex}-${Date.now()}.png`
+    
+    // Subir a Supabase Storage
+    const { data, error } = await supabase.storage
+      .from('images')
+      .upload(fileName, blob, {
+        cacheControl: '3600',
+        upsert: false
+      })
+
+    if (error) {
+      console.error('Error uploading generated image to Supabase:', error)
+      return null
+    }
+
+    // Obtener URL pública
+    const { data: publicData } = supabase.storage
+      .from('images')
+      .getPublicUrl(fileName)
+    
+    return publicData.publicUrl
+  } catch (err) {
+    console.error('Error saving generated image:', err)
+    return null
+  }
+}
