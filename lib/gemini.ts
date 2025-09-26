@@ -16,14 +16,26 @@ export async function generateLook({
   variants = 1,
   variantConfigs = [],
   style = { style: 'casual', season: 'any' },
-  modelCharacteristics
+  modelCharacteristics,
+  outfitOptions = {
+    fullBodyVisible: true,
+    showShoes: true,
+    hideHatsAndCaps: true,
+    adaptShoesToLook: true
+  }
 }: { 
   modelUrls: string[], 
   garmentUrls: string[], 
   variants?: number,
   variantConfigs?: VariantConfig[],
   style?: { style: string, season: string },
-  modelCharacteristics?: any
+  modelCharacteristics?: any,
+  outfitOptions?: {
+    fullBodyVisible: boolean,
+    showShoes: boolean,
+    hideHatsAndCaps: boolean,
+    adaptShoesToLook: boolean
+  }
 }): Promise<string[]> {
   // Si no hay API_KEY, devolvemos imágenes "eco" (echo) para demo
   if (!OPENROUTER_API_KEY) {
@@ -40,7 +52,13 @@ CORE REQUIREMENTS (apply to ALL variants):
 - Keep the person's face, hair, and body shape exactly the same
 - Fit the garments naturally on the person's body
 - For dresses: remove any pants, shirts or conflicting items
-- For tops: keep bottom clothing if no bottom garment provided`
+- For tops: keep bottom clothing if no bottom garment provided
+
+ADDITIONAL OUTFIT OPTIONS:
+- Body framing: ${outfitOptions.fullBodyVisible ? 'Show the complete figure from head to toe in full body view' : 'Focus on upper body/torso area'}
+- Footwear: ${outfitOptions.showShoes ? 'Include appropriate footwear in the image' : 'Crop image to exclude feet/shoes'}
+- Head accessories: ${outfitOptions.hideHatsAndCaps ? 'Do NOT add hats, caps, beanies or any head coverings' : 'Head accessories are allowed if they complement the outfit'}
+- Shoe coordination: ${outfitOptions.adaptShoesToLook ? 'Choose footwear that matches and complements the outfit style and colors' : 'Use neutral/basic footwear'}`
 
   // Generar instrucciones específicas para cada variante
   if (variants > 1 && variantConfigs.length > 0) {

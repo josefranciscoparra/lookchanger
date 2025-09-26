@@ -22,7 +22,13 @@ export async function POST(req: NextRequest) {
       variantConfigs = [],
       style = { style: 'casual', season: 'any' },
       useAdvancedStyle = false,
-      modelCharacteristics 
+      modelCharacteristics,
+      outfitOptions = {
+        fullBodyVisible: true,
+        showShoes: true,
+        hideHatsAndCaps: true,
+        adaptShoesToLook: true
+      }
     } = await req.json()
     
     if (!modelUrls.length || !garmentUrls.length) {
@@ -52,7 +58,8 @@ export async function POST(req: NextRequest) {
       variants,
       variantConfigs, 
       style: useAdvancedStyle ? style : undefined, 
-      modelCharacteristics 
+      modelCharacteristics,
+      outfitOptions
     })
     
     if (!outputs.length) {

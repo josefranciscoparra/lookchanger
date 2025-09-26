@@ -93,6 +93,12 @@ export default function OutfitsPage() {
     style: 'casual',
     season: 'any'
   })
+  const [outfitOptions, setOutfitOptions] = useState({
+    fullBodyVisible: true,
+    showShoes: true,
+    hideHatsAndCaps: true,
+    adaptShoesToLook: true
+  })
   
   // UI states
   const [loading, setLoading] = useState(false)
@@ -346,7 +352,8 @@ export default function OutfitsPage() {
           variantConfigs,
           style: useAdvancedStyle ? stylePreferences : undefined,
           useAdvancedStyle,
-          modelCharacteristics: selectedModelType === 'generated' ? modelCharacteristics : undefined
+          modelCharacteristics: selectedModelType === 'generated' ? modelCharacteristics : undefined,
+          outfitOptions
         })
       })
       const json = await res.json()
@@ -382,6 +389,12 @@ export default function OutfitsPage() {
     setModelCharacteristics({ skinTone: '', bodyType: '', gender: '', age: '' })
     setUseAdvancedStyle(false)
     setStylePreferences({ style: 'casual', season: 'any' })
+    setOutfitOptions({
+      fullBodyVisible: true,
+      showShoes: true,
+      hideHatsAndCaps: true,
+      adaptShoesToLook: true
+    })
     setOutputs([])
     setError('')
     setDownloadError('')
@@ -710,6 +723,72 @@ export default function OutfitsPage() {
               </div>
             )}
             
+            {/* Opciones adicionales del outfit - siempre visibles */}
+            <div className="space-y-4">
+              <h4 className="text-sm font-semibold text-foreground/90 flex items-center gap-2">
+                <div className="rounded-lg bg-primary/10 p-1.5">
+                  <Shirt className="h-4 w-4 text-primary" />
+                </div>
+                Opciones de generación
+              </h4>
+              
+              <div className="grid gap-4 rounded-2xl border border-primary/20 bg-white/70 p-5 shadow-inner">
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="flex items-center justify-between gap-3 rounded-xl border border-primary/15 bg-white/80 px-4 py-3">
+                    <div className="space-y-0.5">
+                      <label className="text-sm font-medium text-foreground/90">Cuerpo completo</label>
+                      <p className="text-xs text-muted-foreground">Mostrar figura completa del modelo</p>
+                    </div>
+                    <Switch
+                      checked={outfitOptions.fullBodyVisible}
+                      onCheckedChange={(checked) => 
+                        setOutfitOptions(prev => ({...prev, fullBodyVisible: checked}))
+                      }
+                    />
+                  </div>
+                  
+                  <div className="flex items-center justify-between gap-3 rounded-xl border border-primary/15 bg-white/80 px-4 py-3">
+                    <div className="space-y-0.5">
+                      <label className="text-sm font-medium text-foreground/90">Mostrar zapatos</label>
+                      <p className="text-xs text-muted-foreground">Incluir calzado en la imagen</p>
+                    </div>
+                    <Switch
+                      checked={outfitOptions.showShoes}
+                      onCheckedChange={(checked) => 
+                        setOutfitOptions(prev => ({...prev, showShoes: checked}))
+                      }
+                    />
+                  </div>
+                  
+                  <div className="flex items-center justify-between gap-3 rounded-xl border border-primary/15 bg-white/80 px-4 py-3">
+                    <div className="space-y-0.5">
+                      <label className="text-sm font-medium text-foreground/90">Ocultar gorros</label>
+                      <p className="text-xs text-muted-foreground">Evitar sombreros y gorras</p>
+                    </div>
+                    <Switch
+                      checked={outfitOptions.hideHatsAndCaps}
+                      onCheckedChange={(checked) => 
+                        setOutfitOptions(prev => ({...prev, hideHatsAndCaps: checked}))
+                      }
+                    />
+                  </div>
+                  
+                  <div className="flex items-center justify-between gap-3 rounded-xl border border-primary/15 bg-white/80 px-4 py-3">
+                    <div className="space-y-0.5">
+                      <label className="text-sm font-medium text-foreground/90">Adaptar zapatos</label>
+                      <p className="text-xs text-muted-foreground">Coordinar calzado con el look</p>
+                    </div>
+                    <Switch
+                      checked={outfitOptions.adaptShoesToLook}
+                      onCheckedChange={(checked) => 
+                        setOutfitOptions(prev => ({...prev, adaptShoesToLook: checked}))
+                      }
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+            
             <Card className="border-none bg-gradient-to-br from-primary/10 via-white to-accent/20 shadow-sm">
               <CardContent className="flex flex-col gap-4 px-6 py-5">
                 <div className="flex items-start gap-3">
@@ -724,6 +803,9 @@ export default function OutfitsPage() {
                       {useAdvancedStyle && <p>• Estilo: {stylePreferences.style}</p>}
                       {useAdvancedStyle && <p>• Temporada: {stylePreferences.season}</p>}
                       <p>• Imágenes: {variants === 1 ? '1 imagen original' : `${variants} variantes`}</p>
+                      <p>• Vista: {outfitOptions.fullBodyVisible ? 'Cuerpo completo' : 'Vista parcial'}</p>
+                      <p>• Calzado: {outfitOptions.showShoes ? 'Incluido' : 'Oculto'}{outfitOptions.adaptShoesToLook ? ' y adaptado' : ''}</p>
+                      <p>• Accesorios: {outfitOptions.hideHatsAndCaps ? 'Sin gorros/gorras' : 'Todos permitidos'}</p>
                       {variants > 1 && variantConfigs.length > 0 && (
                         <div className="ml-4 space-y-0.5 text-xs">
                           {variantConfigs.map(config => (
