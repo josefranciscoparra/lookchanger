@@ -107,17 +107,27 @@ Para monitorear el uso del API de Gemini:
 
 ## 🚀 Fix para Vercel Build Error
 
-Se añadió `export const dynamic = 'force-dynamic'` a todas las rutas API que usan autenticación de Supabase:
-- `/api/gallery/route.ts`
-- `/api/list/route.ts` 
-- `/api/upload/route.ts`
-- `/api/outfits/run/route.ts`
+**Solución Final Aplicada:**
 
-**Y también a las páginas de autenticación que usan `useSearchParams()`:**
-- `app/(auth)/login/page.tsx`
-- `app/(auth)/signup/page.tsx`
+1. **Rutas API marcadas como dinámicas:**
+   - `/api/gallery/route.ts` ✅
+   - `/api/list/route.ts` ✅
+   - `/api/upload/route.ts` ✅ 
+   - `/api/outfits/run/route.ts` ✅
 
-Esto resuelve el error de build "couldn't be rendered statically because it used `cookies`" y hooks dinámicos.
+2. **Layout de autenticación marcado como dinámico:**
+   - `app/(auth)/layout.tsx` ✅ `export const dynamic = 'force-dynamic'`
+
+3. **Páginas de autenticación SIN configuración dinámica:**
+   - `app/(auth)/login/page.tsx` - Removido `dynamic` (no funciona en componentes cliente)
+   - `app/(auth)/signup/page.tsx` - Removido `dynamic` (no funciona en componentes cliente)
+
+**¿Por qué esta solución funciona?**
+- Las páginas `'use client'` no pueden usar `export const dynamic`
+- Al marcar el layout como dinámico, todas las páginas hijas heredan esta configuración
+- Esto permite que `useSearchParams()` funcione sin errores de renderizado estático
+
+Esto resuelve definitivamente el error de build "couldn't be rendered statically because it used `cookies`".
 
 ## 🔗 Archivos Relacionados
 

@@ -6,6 +6,8 @@ export const metadata = {
   description: 'Accede a tu cuenta de LookChanger' 
 }
 
+export const dynamic = 'force-dynamic'
+
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="es">
