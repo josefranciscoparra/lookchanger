@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { saveFilesToTmp } from '@/lib/storage'
+import { createClient } from '@/lib/supabase/server'
 
 export const runtime = 'nodejs'
 
@@ -11,13 +12,20 @@ export async function POST(req: NextRequest) {
     const form = await req.formData()
     const files = form.getAll('files').filter(x => x instanceof File) as File[]
     const categories = form.getAll('categories') as string[]
+    const type = req.nextUrl.searchParams.get('type') || 'model'
     
+    const supabase = createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    
+    if (!user) {
+      return NextResponse.json({ error: 'No autenticado' }, { status: 401 })
+    }
+
     if (!files.length) {
       return NextResponse.json({ error: 'No se han seleccionado archivos' }, { status: 400 })
     }
     
     // Validar que cada archivo tenga una categoría (para prendas)
-    const type = req.nextUrl.searchParams.get('type')
     if (type === 'garment' && categories.length !== files.length) {
       return NextResponse.json({ error: 'Cada prenda debe tener una categoría asignada' }, { status: 400 })
     }
@@ -38,17 +46,19 @@ export async function POST(req: NextRequest) {
     }
 
     const { urls } = await saveFilesToTmp(files)
-    
-    // Registrar en memoria (modo demo)
-    await fetch(new URL('/api/list', req.url), { 
-      method: 'POST', 
-      headers: { 'Content-Type': 'application/json' }, 
-      body: JSON.stringify({ 
-        type: req.nextUrl.searchParams.get('type') || 'model', 
-        urls,
-        categories: type === 'garment' ? categories : undefined
-      }) 
-    })
+    const tableName = type === 'garment' ? 'garments' : 'models'
+    const records = urls.map((url, index) => ({
+      image_url: url,
+      user_id: user.id,
+      ...(type === 'garment' ? { category: categories[index] ?? null } : {})
+    }))
+
+    const { error } = await supabase.from(tableName).insert(records)
+
+    if (error) {
+      console.error('Error saving uploaded files to Supabase:', error)
+      return NextResponse.json({ error: 'Error al guardar datos' }, { status: 500 })
+    }
     
     return NextResponse.json({ urls })
   } catch (error) {

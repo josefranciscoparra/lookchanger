@@ -1,14 +1,24 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
 import { getUserGeneratedImages } from '@/lib/database'
+import { createClient } from '@/lib/supabase/server'
 
 export const runtime = 'nodejs'
 
-export async function GET(req: NextRequest) {
+export async function GET() {
   try {
-    const { searchParams } = new URL(req.url)
-    const userId = searchParams.get('userId') // Opcional: filtrar por usuario
-    
-    const generatedImages = await getUserGeneratedImages(userId || undefined)
+    const supabase = createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+
+    if (!user) {
+      return NextResponse.json({
+        success: false,
+        error: 'No autenticado',
+        images: [],
+        total: 0
+      }, { status: 401 })
+    }
+
+    const generatedImages = await getUserGeneratedImages(supabase, user.id)
     
     return NextResponse.json({ 
       success: true,

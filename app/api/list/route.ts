@@ -25,9 +25,13 @@ export async function GET(req: Request) {
   
   try {
     const tableName = type === 'model' ? 'models' : 'garments'
+    const columns = type === 'garment'
+      ? 'id, image_url, created_at, category'
+      : 'id, image_url, created_at'
+
     const { data, error } = await supabase
       .from(tableName)
-      .select('id, image_url, created_at, category')
+      .select(columns)
       .eq('user_id', user.id)  // Filtrar por usuario autenticado
       .order('created_at', { ascending: false })
       
@@ -40,7 +44,7 @@ export async function GET(req: Request) {
       id: item.id,
       url: item.image_url,
       created_at: item.created_at,
-      category: item.category
+      category: 'category' in item ? item.category : undefined
     })) || []
     return Response.json({ items })
   } catch (err) {

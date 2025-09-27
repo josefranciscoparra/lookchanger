@@ -1,11 +1,4 @@
-import { createClient } from '@supabase/supabase-js'
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-
-const supabase = supabaseUrl && supabaseAnonKey 
-  ? createClient(supabaseUrl, supabaseAnonKey)
-  : null
+import type { SupabaseClient } from '@supabase/supabase-js'
 
 export type OutfitJob = {
   id: string
@@ -27,21 +20,12 @@ export type Output = {
 }
 
 export async function createOutfitJob(
+  supabase: SupabaseClient,
   modelIds: string[], 
   garmentIds: string[], 
-  styleConfig?: any,
-  userId?: string
+  styleConfig: any | undefined,
+  userId: string
 ): Promise<string | null> {
-  if (!supabase) {
-    console.log('[database] Supabase no configurado')
-    return null
-  }
-  
-  if (!userId) {
-    console.log('[database] Usuario requerido para crear outfit job')
-    return null
-  }
-  
   try {
     const { data, error } = await supabase
       .from('outfit_jobs')
@@ -68,9 +52,11 @@ export async function createOutfitJob(
   }
 }
 
-export async function updateJobStatus(jobId: string, status: 'completed' | 'failed'): Promise<boolean> {
-  if (!supabase) return false
-  
+export async function updateJobStatus(
+  supabase: SupabaseClient,
+  jobId: string, 
+  status: 'completed' | 'failed'
+): Promise<boolean> {
   try {
     const { error } = await supabase
       .from('outfit_jobs')
@@ -89,9 +75,12 @@ export async function updateJobStatus(jobId: string, status: 'completed' | 'fail
   }
 }
 
-export async function createOutput(jobId: string, imageUrl: string, meta?: any): Promise<boolean> {
-  if (!supabase) return false
-  
+export async function createOutput(
+  supabase: SupabaseClient,
+  jobId: string, 
+  imageUrl: string, 
+  meta: any | undefined
+): Promise<boolean> {
   try {
     const { error } = await supabase
       .from('outputs')
@@ -113,14 +102,11 @@ export async function createOutput(jobId: string, imageUrl: string, meta?: any):
   }
 }
 
-export async function getUserGeneratedImages(userId?: string): Promise<{ job: OutfitJob; outputs: Output[] }[]> {
-  if (!supabase) {
-    console.log('[database] Supabase no configurado, retornando array vacío')
-    return []
-  }
-  
+export async function getUserGeneratedImages(
+  supabase: SupabaseClient,
+  userId?: string
+): Promise<{ job: OutfitJob; outputs: Output[] }[]> {
   try {
-    // Obtener jobs completados del usuario (o todos si no hay userId)
     const jobsQuery = supabase
       .from('outfit_jobs')
       .select('*')

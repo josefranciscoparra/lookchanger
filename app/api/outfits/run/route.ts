@@ -59,10 +59,11 @@ export async function POST(req: NextRequest) {
     
     // Crear job en la base de datos
     const jobId = await createOutfitJob(
+      supabase,
       modelUrls, 
       garmentUrls, 
       useAdvancedStyle ? style : undefined,
-      user.id  // Pasar el ID del usuario autenticado
+      user.id
     )
     
     const outputs = await generateLook({ 
@@ -78,7 +79,7 @@ export async function POST(req: NextRequest) {
     if (!outputs.length) {
       // Marcar job como fallido si no hay outputs
       if (jobId) {
-        await updateJobStatus(jobId, 'failed')
+        await updateJobStatus(supabase, jobId, 'failed')
       }
       return NextResponse.json({ 
         error: 'No se pudieron generar imágenes. Verifica tu API key de Gemini' 
@@ -96,7 +97,7 @@ export async function POST(req: NextRequest) {
         const finalUrl = savedImageUrl || imageUrl // Fallback a original si falla el guardado
         
         // Crear output en DB
-        await createOutput(jobId, finalUrl, { 
+        await createOutput(supabase, jobId, finalUrl, { 
           variant_index: i, 
           original_data_url: imageUrl 
         })
@@ -105,7 +106,7 @@ export async function POST(req: NextRequest) {
       }
       
       // Marcar job como completado
-      await updateJobStatus(jobId, 'completed')
+      await updateJobStatus(supabase, jobId, 'completed')
     }
     
     return NextResponse.json({ 
