@@ -4,7 +4,7 @@ import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar'
 import { AuthProvider } from '@/components/auth/auth-provider'
 
 export const metadata = { 
-  title: 'LookChanger', 
+  title: 'Lookah', 
   description: 'Transforma tu estilo con inteligencia artificial - Pruébate ropa virtualmente' 
 }
 

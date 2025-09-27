@@ -2,6 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
+import Image from "next/image"
 import { 
   Sparkles, 
   Users, 
@@ -10,7 +11,7 @@ import {
   Home,
   Settings,
   HelpCircle,
-  Image
+  Image as ImageIcon
 } from "lucide-react"
 
 import {
@@ -54,7 +55,7 @@ const menuItems = [
   {
     title: "Mis Imágenes",
     url: "/gallery",
-    icon: Image,
+    icon: ImageIcon,
   },
 ]
 
@@ -77,20 +78,21 @@ export function AppSidebar() {
   return (
     <Sidebar collapsible="icon">
       <SidebarHeader>
-        <div className="flex items-center gap-2 px-2">
-          <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-            <Sparkles className="size-4" />
-          </div>
-          <div className="grid flex-1 text-left text-sm leading-tight">
-            <span className="truncate font-semibold">LookChanger</span>
-            <span className="truncate text-xs text-muted-foreground">
-              AI Virtual Try-On
-            </span>
-          </div>
+        <div className="flex items-start justify-start pl-4 pr-1 pt-1 pb-0">
+          <Link href="/" className="flex items-center justify-center w-28 h-28 overflow-hidden cursor-pointer">
+            <Image 
+              src="/logoLookah3.png" 
+              alt="Lookah Logo" 
+              width={144}
+              height={144}
+              className="w-full h-full object-cover scale-105"
+              priority
+            />
+          </Link>
         </div>
       </SidebarHeader>
 
-      <SidebarContent>
+      <SidebarContent className="-mt-4">
         <SidebarGroup>
           <SidebarGroupLabel>Aplicación</SidebarGroupLabel>
           <SidebarGroupContent>
@@ -143,7 +145,7 @@ export function AppSidebar() {
           <UserNav />
           <Separator />
           <div className="text-xs text-muted-foreground text-center">
-            © 2025 LookChanger
+            © 2025 Lookah
           </div>
           <div className="text-xs text-muted-foreground text-center">
             Powered by AI
