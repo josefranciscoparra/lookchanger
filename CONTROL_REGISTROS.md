@@ -113,7 +113,11 @@ Se añadió `export const dynamic = 'force-dynamic'` a todas las rutas API que u
 - `/api/upload/route.ts`
 - `/api/outfits/run/route.ts`
 
-Esto resuelve el error de build "couldn't be rendered statically because it used `cookies`".
+**Y también a las páginas de autenticación que usan `useSearchParams()`:**
+- `app/(auth)/login/page.tsx`
+- `app/(auth)/signup/page.tsx`
+
+Esto resuelve el error de build "couldn't be rendered statically because it used `cookies`" y hooks dinámicos.
 
 ## 🔗 Archivos Relacionados
 
