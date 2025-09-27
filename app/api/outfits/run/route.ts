@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { generateLook } from '@/lib/gemini'
 import { createOutfitJob, updateJobStatus, createOutput } from '@/lib/database'
 import { saveGeneratedImageToStorage } from '@/lib/storage'
+import { createClient } from '@/lib/supabase/server'
 
 export const runtime = 'nodejs'
 
@@ -14,6 +15,14 @@ interface VariantConfig {
 }
 
 export async function POST(req: NextRequest) {
+  // Verificar autenticación
+  const supabase = createClient()
+  const { data: { user }, error: authError } = await supabase.auth.getUser()
+  
+  if (!user) {
+    return NextResponse.json({ error: 'No autenticado' }, { status: 401 })
+  }
+
   try {
     const { 
       modelUrls = [], 
@@ -52,7 +61,8 @@ export async function POST(req: NextRequest) {
     const jobId = await createOutfitJob(
       modelUrls, 
       garmentUrls, 
-      useAdvancedStyle ? style : undefined
+      useAdvancedStyle ? style : undefined,
+      user.id  // Pasar el ID del usuario autenticado
     )
     
     const outputs = await generateLook({ 

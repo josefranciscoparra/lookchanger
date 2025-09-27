@@ -37,6 +37,11 @@ export async function createOutfitJob(
     return null
   }
   
+  if (!userId) {
+    console.log('[database] Usuario requerido para crear outfit job')
+    return null
+  }
+  
   try {
     const { data, error } = await supabase
       .from('outfit_jobs')

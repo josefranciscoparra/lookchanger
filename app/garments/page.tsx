@@ -1,8 +1,8 @@
 'use client'
 import { useState, useCallback, useEffect } from 'react'
 import { useAppStore, type GarmentCategory } from '@/lib/store'
-import { Shirt, Sparkles } from 'lucide-react'
-import { Alert, AlertDescription, X } from '@/components/ui/alert'
+import { Shirt, Sparkles, X } from 'lucide-react'
+import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { TooltipProvider } from '@/components/ui/tooltip'
 

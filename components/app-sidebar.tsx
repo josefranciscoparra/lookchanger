@@ -28,6 +28,7 @@ import {
 } from "@/components/ui/sidebar"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
+import { UserNav } from "@/components/ui/user-nav"
 
 const menuItems = [
   {
@@ -138,7 +139,9 @@ export function AppSidebar() {
       </SidebarContent>
 
       <SidebarFooter>
-        <div className="p-2">
+        <div className="p-2 space-y-2">
+          <UserNav />
+          <Separator />
           <div className="text-xs text-muted-foreground text-center">
             © 2025 LookChanger
           </div>

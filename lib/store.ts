@@ -1,5 +1,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
+import { createClient } from '@/lib/supabase/client'
+import type { User } from '@supabase/supabase-js'
 
 export interface Model {
   id?: string
@@ -17,6 +19,10 @@ export interface Garment {
 }
 
 interface AppState {
+  // Estados de autenticación
+  user: User | null
+  isAuthLoading: boolean
+  
   // Estados
   models: Model[]
   garments: Garment[]
@@ -37,6 +43,11 @@ interface AppState {
   getGarmentsByCategory: () => Record<GarmentCategory, Garment[]>
   loadGarmentsFromApi: () => Promise<void>
   
+  // Acciones de autenticación
+  setUser: (user: User | null) => void
+  signOut: () => Promise<void>
+  initializeAuth: () => Promise<void>
+  
   // Acciones generales
   initialize: () => Promise<void>
   setLoading: (loading: boolean) => void
@@ -46,6 +57,8 @@ export const useAppStore = create<AppState>()(
   persist(
     (set, get) => ({
       // Estado inicial
+      user: null,
+      isAuthLoading: false,
       models: [],
       garments: [],
       isLoading: false,
@@ -131,10 +144,39 @@ export const useAppStore = create<AppState>()(
         }
       },
       
+      // Acciones de autenticación
+      setUser: (user) => set({ user }),
+      
+      signOut: async () => {
+        const supabase = createClient()
+        await supabase.auth.signOut()
+        set({ user: null, models: [], garments: [], isInitialized: false })
+      },
+      
+      initializeAuth: async () => {
+        const supabase = createClient()
+        set({ isAuthLoading: true })
+        
+        try {
+          const { data: { user } } = await supabase.auth.getUser()
+          set({ user })
+          
+          // Escuchar cambios de autenticación
+          supabase.auth.onAuthStateChange((event, session) => {
+            set({ user: session?.user ?? null })
+            if (event === 'SIGNED_OUT') {
+              set({ models: [], garments: [], isInitialized: false })
+            }
+          })
+        } finally {
+          set({ isAuthLoading: false })
+        }
+      },
+      
       // Acciones generales
       initialize: async () => {
-        const { isInitialized } = get()
-        if (isInitialized) return
+        const { isInitialized, user } = get()
+        if (isInitialized || !user) return
         
         set({ isLoading: true })
         try {

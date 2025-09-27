@@ -67,7 +67,7 @@ const VARIANT_OPTIONS = {
 
 export default function OutfitsPage() {
   // Usar Zustand store para modelos y prendas
-  const { models, garments, initialize } = useAppStore()
+  const { models, garments, initialize, user } = useAppStore()
   
   // Data states
   const [outputs, setOutputs] = useState<string[]>([])
