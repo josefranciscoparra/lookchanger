@@ -14,6 +14,7 @@ export default function LoginPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const redirectTo = searchParams.get('redirectTo') || '/'
+  const message = searchParams.get('message') // Mensaje del middleware cuando signup está deshabilitado
   const supabase = createClient()
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -47,15 +48,23 @@ export default function LoginPage() {
           <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
             Iniciar Sesión
           </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
-            O{' '}
-            <Link href="/signup" className="font-medium text-blue-600 hover:text-blue-500">
-              crear una cuenta nueva
-            </Link>
-          </p>
+          {process.env.NEXT_PUBLIC_DISABLE_SIGNUP !== 'true' && (
+            <p className="mt-2 text-center text-sm text-gray-600">
+              O{' '}
+              <Link href="/signup" className="font-medium text-blue-600 hover:text-blue-500">
+                crear una cuenta nueva
+              </Link>
+            </p>
+          )}
         </div>
         
         <form className="mt-8 space-y-6" onSubmit={handleLogin}>
+          {message && (
+            <div className="bg-orange-50 border border-orange-200 text-orange-700 px-4 py-3 rounded">
+              {message}
+            </div>
+          )}
+          
           {error && (
             <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
               {error}

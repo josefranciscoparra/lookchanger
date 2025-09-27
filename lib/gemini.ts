@@ -10,6 +10,14 @@ interface VariantConfig {
   description?: string
 }
 
+type GeminiContent = {
+  type: 'text' | 'image_url'
+  text?: string
+  image_url?: {
+    url: string
+  }
+}
+
 function getPhotoStylePrompt(style: string): string {
   switch (style) {
     case 'studio':
@@ -137,7 +145,7 @@ Style Preferences:
   }
 
   // Preparar el contenido del mensaje
-  const content = [
+  const content: GeminiContent[] = [
     {
       type: "text",
       text: promptText

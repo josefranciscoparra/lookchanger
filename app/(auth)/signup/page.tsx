@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
@@ -15,9 +15,25 @@ export default function SignupPage() {
   
   const router = useRouter()
   const supabase = createClient()
+  
+  // Verificar si los registros están deshabilitados
+  const isSignupDisabled = process.env.NEXT_PUBLIC_DISABLE_SIGNUP === 'true'
+  
+  useEffect(() => {
+    if (isSignupDisabled) {
+      router.push('/login?message=Registros temporalmente deshabilitados')
+    }
+  }, [isSignupDisabled, router])
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault()
+    
+    // Verificación adicional por si intentan enviar el formulario directamente
+    if (isSignupDisabled) {
+      setError('Los registros están temporalmente deshabilitados.')
+      return
+    }
+    
     setLoading(true)
     setError('')
     setMessage('')

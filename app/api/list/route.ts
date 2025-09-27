@@ -24,28 +24,45 @@ export async function GET(req: Request) {
   }
   
   try {
-    const tableName = type === 'model' ? 'models' : 'garments'
-    const columns = type === 'garment'
-      ? 'id, image_url, created_at, category'
-      : 'id, image_url, created_at'
+    if (type === 'garment') {
+      const { data, error } = await supabase
+        .from('garments')
+        .select('id,image_url,created_at,category')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+
+      if (error) {
+        console.error('Error fetching garments from Supabase:', error)
+        return Response.json({ error: 'Error al obtener datos' }, { status: 500 })
+      }
+
+      const items = data?.map(item => ({
+        id: item.id,
+        url: item.image_url,
+        created_at: item.created_at,
+        category: item.category
+      })) || []
+
+      return Response.json({ items })
+    }
 
     const { data, error } = await supabase
-      .from(tableName)
-      .select(columns)
-      .eq('user_id', user.id)  // Filtrar por usuario autenticado
+      .from('models')
+      .select('id,image_url,created_at')
+      .eq('user_id', user.id)
       .order('created_at', { ascending: false })
-      
+
     if (error) {
-      console.error('Error fetching from Supabase:', error)
+      console.error('Error fetching models from Supabase:', error)
       return Response.json({ error: 'Error al obtener datos' }, { status: 500 })
     }
-    
+
     const items = data?.map(item => ({
       id: item.id,
       url: item.image_url,
-      created_at: item.created_at,
-      category: 'category' in item ? item.category : undefined
+      created_at: item.created_at
     })) || []
+
     return Response.json({ items })
   } catch (err) {
     console.error('Error in Supabase GET:', err)

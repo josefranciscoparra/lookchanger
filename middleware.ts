@@ -47,6 +47,14 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(url)
   }
 
+  // Redirigir a login si los registros están deshabilitados y trata de acceder a signup
+  if (request.nextUrl.pathname === '/signup' && process.env.NEXT_PUBLIC_DISABLE_SIGNUP === 'true') {
+    const url = request.nextUrl.clone()
+    url.pathname = '/login'
+    url.searchParams.set('message', 'Los registros están temporalmente deshabilitados. Contacta con el administrador si necesitas acceso.')
+    return NextResponse.redirect(url)
+  }
+
   // Redirigir a home si está autenticado y trata de acceder a login/signup
   if ((request.nextUrl.pathname === '/login' || request.nextUrl.pathname === '/signup') && user) {
     const url = request.nextUrl.clone()
