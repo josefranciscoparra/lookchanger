@@ -200,11 +200,12 @@ export const useAppStore = create<AppState>()(
       
       // Acciones generales
       initialize: async () => {
-        const { isInitialized, user } = get()
-        if (isInitialized || !user) return
+        const { user } = get()
+        if (!user) return // Sin usuario, no cargar nada
         
         set({ isLoading: true })
         try {
+          // Si hay usuario, SIEMPRE sincronizar con Supabase
           await Promise.all([
             get().loadModelsFromApi(),
             get().loadGarmentsFromApi()
