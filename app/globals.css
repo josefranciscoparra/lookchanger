@@ -77,6 +77,8 @@
 
 html, body, :root { height: 100%; }
 
+* { outline-color: #1F2A44; }
+
 @layer base {
   * {
     @apply border-border;

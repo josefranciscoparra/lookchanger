@@ -1,131 +1,74 @@
 import Link from 'next/link'
-import { ArrowRight, Sparkles, User, Shirt, Wand2, Zap, Star, Heart } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
+import { StepCard } from '@/components/StepCard'
+import { Accordion } from '@/components/Accordion'
+
+function IconUser() { return <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M20 21a8 8 0 1 0-16 0"/><circle cx="12" cy="7" r="4"/></svg> }
+function IconShirt() { return <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 7l4-3 4 3 4-3 4 3v13H4z"/></svg> }
+function IconStars() { return <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 17l-3.5 2 1-4-3-2.6 4-.3L12 8l1.5 4.1 4 .3-3 2.6 1 4z"/></svg> }
 
 export default function Page() {
   return (
-    <div className="space-y-8">
-      {/* Hero Section */}
-      <div className="text-center space-y-6">
-        <div className="space-y-4">
-          <Badge className="mx-auto" variant="secondary">
-            <Zap className="h-3 w-3 mr-1" />
-            Potenciado por IA
-          </Badge>
-          <h1 className="text-5xl font-bold bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">
-            LookChanger
-          </h1>
-          <p className="text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-            Transforma tu estilo con inteligencia artificial. Pruébate ropa virtualmente 
-            y descubre looks únicos en segundos.
-          </p>
-        </div>
-        
-        <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <Button asChild size="lg" className="text-lg px-8">
-            <Link href="/outfits">
-              <Sparkles className="mr-2 h-5 w-5" />
-              Empezar Ahora
-            </Link>
+    <main className="px-6 py-8">
+      {/* Hero */}
+      <section className="max-w-3xl">
+        <span className="inline-flex items-center text-xs font-medium text-text-secondary bg-white border border-border rounded-lg px-2 py-1 mb-3">
+          ⚡ Potenciado por IA
+        </span>
+        <h1 className="text-4xl font-bold tracking-tight mb-3 text-ink-500">Cambia tu look con IA</h1>
+        <p className="text-text-secondary mb-6">
+          Sube modelos y prendas, y genera outfits en segundos. Un flujo simple con resultados profesionales.
+        </p>
+        <div className="flex gap-3">
+          <Button variant="accent" asChild>
+            <Link href="/outfits">Empezar ahora</Link>
           </Button>
-          <Button asChild variant="outline" size="lg" className="text-lg px-8">
-            <Link href="/models">
-              Explorar Modelos
-            </Link>
+          <Button variant="secondary-minimal" asChild>
+            <Link href="/models">Explorar modelos</Link>
           </Button>
         </div>
-      </div>
+      </section>
 
-      {/* Features Grid */}
-      <div className="grid md:grid-cols-3 gap-6 mt-12">
-        <Card className="text-center">
-          <CardHeader>
-            <div className="mx-auto w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mb-4">
-              <User className="h-6 w-6 text-blue-600" />
-            </div>
-            <CardTitle>1. Sube Modelos</CardTitle>
-            <CardDescription>
-              Agrega fotos de modelos con diferentes poses y expresiones
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button asChild variant="outline" className="w-full">
-              <Link href="/models">
-                Subir Modelos <ArrowRight className="ml-2 h-4 w-4" />
-              </Link>
-            </Button>
-          </CardContent>
-        </Card>
+      {/* Steps */}
+      <section className="mt-10 grid grid-cols-1 md:grid-cols-3 gap-4">
+        <StepCard
+          icon={<IconUser />}
+          title="1. Sube Modelos"
+          desc="Agrega fotos de modelos con distintas poses y expresiones."
+          cta="Subir modelos"
+          href="/models"
+          ctaVariant="secondary-minimal"
+        />
+        <StepCard
+          icon={<IconShirt />}
+          title="2. Sube Prendas"
+          desc="Sube ropa, zapatos y complementos con fondo neutro."
+          cta="Subir prendas"
+          href="/garments"
+          ctaVariant="secondary-minimal"
+        />
+        <StepCard
+          icon={<IconStars />}
+          title="3. Genera Outfits"
+          desc="Combina modelos y prendas con IA para crear looks únicos."
+          cta="Generar outfits"
+          href="/outfits"
+          ctaVariant="primary"
+        />
+      </section>
 
-        <Card className="text-center">
-          <CardHeader>
-            <div className="mx-auto w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mb-4">
-              <Shirt className="h-6 w-6 text-green-600" />
-            </div>
-            <CardTitle>2. Sube Prendas</CardTitle>
-            <CardDescription>
-              Agrega ropa, zapatos y complementos con fondo neutro
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button asChild variant="outline" className="w-full">
-              <Link href="/garments">
-                Subir Prendas <ArrowRight className="ml-2 h-4 w-4" />
-              </Link>
-            </Button>
-          </CardContent>
-        </Card>
-
-        <Card className="text-center">
-          <CardHeader>
-            <div className="mx-auto w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mb-4">
-              <Wand2 className="h-6 w-6 text-purple-600" />
-            </div>
-            <CardTitle>3. Genera Outfits</CardTitle>
-            <CardDescription>
-              Crea looks únicos combinando modelos y prendas con IA
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button asChild className="w-full">
-              <Link href="/outfits">
-                Generar Outfits <Sparkles className="ml-2 h-4 w-4" />
-              </Link>
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Tips Section */}
-      <Card className="mt-12">
-        <CardHeader>
-          <CardTitle>💡 Consejos para mejores resultados</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid md:grid-cols-2 gap-6">
-            <div>
-              <h4 className="font-semibold mb-2">Para modelos:</h4>
-              <ul className="space-y-1 text-sm text-muted-foreground">
-                <li>• Usa diferentes poses y expresiones</li>
-                <li>• Buena iluminación y resolución</li>
-                <li>• Fondo simple y neutro</li>
-                <li>• Modelo claramente visible</li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="font-semibold mb-2">Para prendas:</h4>
-              <ul className="space-y-1 text-sm text-muted-foreground">
-                <li>• Fondo blanco o neutro</li>
-                <li>• Prenda bien extendida</li>
-                <li>• Sin sombras pronunciadas</li>
-                <li>• Resolución entre 1024-2048px</li>
-              </ul>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
+      {/* Tips */}
+      <section className="mt-10 max-w-3xl">
+        <h2 className="text-lg font-semibold mb-3 text-ink-500">Consejos para mejores resultados</h2>
+        <Accordion title="Recomendaciones rápidas" defaultOpen>
+          <ul className="list-disc pl-5 space-y-1">
+            <li>Fondo blanco o neutro y luz uniforme.</li>
+            <li>Modelos con 2–3 poses y expresiones diferentes.</li>
+            <li>Ropa sin arrugas marcadas ni sombras duras.</li>
+            <li>Sube imágenes de ≥ 1024px y bien recortadas.</li>
+          </ul>
+        </Accordion>
+      </section>
+    </main>
   )
 }

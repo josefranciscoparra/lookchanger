@@ -43,7 +43,7 @@ export function UserNav() {
       <DropdownMenuTrigger className="flex items-center gap-3 w-full p-2 rounded-lg hover:bg-accent hover:text-accent-foreground transition-colors cursor-pointer outline-none focus:ring-2 focus:ring-ring">
         <Avatar className="h-9 w-9">
           <AvatarImage src={user.user_metadata?.avatar_url} />
-          <AvatarFallback className="bg-[#FCBAD3] text-white text-sm font-medium">
+          <AvatarFallback className="bg-ink-500 text-white text-sm font-medium">
             {initials}
           </AvatarFallback>
         </Avatar>
