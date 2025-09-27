@@ -41,11 +41,11 @@ export default function ModelsPage() {
         {/* Header simplificado */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-blue-100 rounded-full">
-              <User className="h-6 w-6 text-blue-600" />
+            <div className="p-2 bg-ink-100 rounded-full">
+              <User className="h-6 w-6 text-ink-500" />
             </div>
             <div>
-              <h1 className="text-3xl font-bold">Gestión de Modelos</h1>
+              <h1 className="text-3xl font-bold text-ink-500">Gestión de Modelos</h1>
               <p className="text-muted-foreground">Sube y organiza tus modelos para crear looks únicos</p>
             </div>
           </div>

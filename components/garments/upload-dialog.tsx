@@ -22,12 +22,12 @@ interface UploadDialogProps {
 }
 
 const categoryInfo = {
-  tops: { name: 'Tops', icon: '👕', color: 'bg-red-100 text-red-700', description: 'Camisetas, camisas, blusas' },
-  bottoms: { name: 'Pantalones', icon: '👖', color: 'bg-blue-100 text-blue-700', description: 'Pantalones, faldas, shorts' },
-  vestidos: { name: 'Vestidos', icon: '👗', color: 'bg-purple-100 text-purple-700', description: 'Vestidos y monos' },
-  calzado: { name: 'Calzado', icon: '👞', color: 'bg-green-100 text-green-700', description: 'Zapatos, botas, sandalias' },
-  abrigos: { name: 'Abrigos', icon: '🧥', color: 'bg-indigo-100 text-indigo-700', description: 'Chaquetas, abrigos, blazers' },
-  accesorios: { name: 'Accesorios', icon: '👜', color: 'bg-orange-100 text-orange-700', description: 'Bolsos, cinturones, joyas' },
+  tops: { name: 'Tops', icon: '👕', color: 'bg-ink-100 text-ink-700', description: 'Camisetas, camisas, blusas' },
+  bottoms: { name: 'Pantalones', icon: '👖', color: 'bg-slate-100 text-slate-700', description: 'Pantalones, faldas, shorts' },
+  vestidos: { name: 'Vestidos', icon: '👗', color: 'bg-gray-100 text-gray-700', description: 'Vestidos y monos' },
+  calzado: { name: 'Calzado', icon: '👞', color: 'bg-zinc-100 text-zinc-700', description: 'Zapatos, botas, sandalias' },
+  abrigos: { name: 'Abrigos', icon: '🧥', color: 'bg-stone-100 text-stone-700', description: 'Chaquetas, abrigos, blazers' },
+  accesorios: { name: 'Accesorios', icon: '👜', color: 'bg-neutral-100 text-neutral-700', description: 'Bolsos, cinturones, joyas' },
 }
 
 export function UploadDialog({ open, onOpenChange, onUploadComplete }: UploadDialogProps) {
@@ -247,7 +247,7 @@ export function UploadDialog({ open, onOpenChange, onUploadComplete }: UploadDia
               <div className="space-y-4">
                 <div className="rounded-lg border bg-muted/30 p-4">
                   <div className="flex items-center gap-2 mb-3">
-                    <Info className="h-4 w-4 text-primary" />
+                    <Info className="h-4 w-4 text-ink-500" />
                     <h4 className="font-semibold text-sm">Tips para mejores resultados</h4>
                   </div>
                   <ul className="space-y-2 text-xs text-muted-foreground">
@@ -270,18 +270,18 @@ export function UploadDialog({ open, onOpenChange, onUploadComplete }: UploadDia
                   </ul>
                 </div>
                 
-                <div className="rounded-lg border bg-blue-50 p-4">
+                <div className="rounded-lg border bg-ink-50 p-4">
                   <div className="flex items-center gap-2 mb-2">
-                    <Sparkles className="h-4 w-4 text-blue-600" />
-                    <h4 className="font-semibold text-sm text-blue-900">Categorías disponibles</h4>
+                    <Sparkles className="h-4 w-4 text-ink-600" />
+                    <h4 className="font-semibold text-sm text-ink-700">Categorías disponibles</h4>
                   </div>
                   <div className="grid grid-cols-2 gap-1 text-xs">
-                    <span className="text-blue-700">👕 Tops</span>
-                    <span className="text-blue-700">👖 Pantalones</span>
-                    <span className="text-blue-700">👗 Vestidos</span>
-                    <span className="text-blue-700">👞 Calzado</span>
-                    <span className="text-blue-700">🧥 Abrigos</span>
-                    <span className="text-blue-700">👜 Accesorios</span>
+                    <span className="text-ink-600">👕 Tops</span>
+                    <span className="text-ink-600">👖 Pantalones</span>
+                    <span className="text-ink-600">👗 Vestidos</span>
+                    <span className="text-ink-600">👞 Calzado</span>
+                    <span className="text-ink-600">🧥 Abrigos</span>
+                    <span className="text-ink-600">👜 Accesorios</span>
                   </div>
                 </div>
               </div>
@@ -302,11 +302,11 @@ export function UploadDialog({ open, onOpenChange, onUploadComplete }: UploadDia
                     
                     return (
                       <div key={i} className="flex items-center gap-3 p-3 bg-muted/30 rounded-lg">
-                        <div className="p-2 bg-green-100 rounded">
+                        <div className="p-2 bg-ink-100 rounded">
                           {categoryData ? (
                             <span className="text-lg">{categoryData.icon}</span>
                           ) : (
-                            <Package className="h-4 w-4 text-green-600" />
+                            <Package className="h-4 w-4 text-ink-600" />
                           )}
                         </div>
                         <div className="flex-1 min-w-0">

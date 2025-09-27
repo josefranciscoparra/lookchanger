@@ -424,14 +424,14 @@ export default function OutfitsPage() {
               <TabsList className="grid w-full grid-cols-2 rounded-2xl bg-secondary/70 p-1 backdrop-blur">
                 <TabsTrigger
                   value="existing"
-                  className="flex items-center gap-2 rounded-xl text-sm font-medium data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm"
+                  className="flex items-center gap-2 rounded-xl text-sm font-medium data-[state=active]:bg-white data-[state=active]:text-ink-500 data-[state=active]:shadow-sm"
                 >
                   <Users className="h-4 w-4" />
                   Usar Modelo Existente
                 </TabsTrigger>
                 <TabsTrigger
                   value="generated"
-                  className="flex items-center gap-2 rounded-xl text-sm font-medium data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm"
+                  className="flex items-center gap-2 rounded-xl text-sm font-medium data-[state=active]:bg-white data-[state=active]:text-ink-500 data-[state=active]:shadow-sm"
                 >
                   <Camera className="h-4 w-4" />
                   Generar Modelo
@@ -450,7 +450,7 @@ export default function OutfitsPage() {
                           key={model.url}
                           onClick={() => setSelectedModel(model.url)}
                           className={`group relative overflow-hidden rounded-2xl border border-transparent bg-white/80 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 ${
-                            isSelected ? 'border-primary/30 ring-2 ring-primary/30 shadow-lg' : ''
+                            isSelected ? 'border-ink-30 ring-2 ring-primary/30 shadow-lg' : ''
                           }`}
                         >
                           <img
@@ -463,7 +463,7 @@ export default function OutfitsPage() {
                           </div>
                           {isSelected && (
                             <div className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-full bg-white shadow-sm">
-                              <CheckCircle className="h-5 w-5 text-primary" />
+                              <CheckCircle className="h-5 w-5 text-ink-500" />
                             </div>
                           )}
                         </button>
@@ -471,13 +471,13 @@ export default function OutfitsPage() {
                     })}
                   </div>
                 ) : (
-                  <div className="rounded-3xl border border-dashed border-primary/20 bg-white/60 p-12 text-center shadow-inner">
-                    <User className="mb-4 h-12 w-12 mx-auto text-primary/60" />
+                  <div className="rounded-3xl border border-dashed border-ink-20 bg-white/60 p-12 text-center shadow-inner">
+                    <User className="mb-4 h-12 w-12 mx-auto text-ink-500/60" />
                     <h3 className="mb-2 text-lg font-semibold text-foreground/90">No hay modelos disponibles</h3>
                     <p className="mb-5 text-sm text-muted-foreground">
                       Sube tus modelos para poder seleccionarlos rápidamente desde aquí.
                     </p>
-                    <Button variant="outline" className="rounded-full border-primary/20 bg-white/80 text-primary hover:bg-primary/10">
+                    <Button variant="outline" className="rounded-full border-ink-20 bg-white/80 text-ink-500 hover:bg-ink-10">
                       <Upload className="mr-2 h-4 w-4" />
                       Ir a Modelos
                     </Button>
@@ -491,10 +491,10 @@ export default function OutfitsPage() {
                     <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground/70">Tono de piel</label>
                     <Select value={modelCharacteristics.skinTone} onValueChange={(value) => 
                       setModelCharacteristics(prev => ({...prev, skinTone: value}))}>
-                      <SelectTrigger className="rounded-xl border-primary/20 bg-white/80 text-sm">
+                      <SelectTrigger className="rounded-xl border-ink-20 bg-white/80 text-sm">
                         <SelectValue placeholder="Selecciona tono de piel" />
                       </SelectTrigger>
-                      <SelectContent className="rounded-xl border border-primary/20 bg-white/95 shadow-lg">
+                      <SelectContent className="rounded-xl border border-ink-20 bg-white/95 shadow-lg">
                         <SelectItem value="very-light">Muy claro</SelectItem>
                         <SelectItem value="light">Claro</SelectItem>
                         <SelectItem value="medium">Medio</SelectItem>
@@ -510,10 +510,10 @@ export default function OutfitsPage() {
                       <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground/70">Género</label>
                       <Select value={modelCharacteristics.gender} onValueChange={(value) => 
                         setModelCharacteristics(prev => ({...prev, gender: value}))}>
-                        <SelectTrigger className="rounded-xl border-primary/20 bg-white/80 text-sm">
+                        <SelectTrigger className="rounded-xl border-ink-20 bg-white/80 text-sm">
                           <SelectValue placeholder="Género" />
                         </SelectTrigger>
-                        <SelectContent className="rounded-xl border border-primary/20 bg-white/95 shadow-lg">
+                        <SelectContent className="rounded-xl border border-ink-20 bg-white/95 shadow-lg">
                           <SelectItem value="female">Femenino</SelectItem>
                           <SelectItem value="male">Masculino</SelectItem>
                           <SelectItem value="non-binary">No binario</SelectItem>
@@ -525,10 +525,10 @@ export default function OutfitsPage() {
                       <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground/70">Edad aproximada</label>
                       <Select value={modelCharacteristics.age} onValueChange={(value) => 
                         setModelCharacteristics(prev => ({...prev, age: value}))}>
-                        <SelectTrigger className="rounded-xl border-primary/20 bg-white/80 text-sm">
+                        <SelectTrigger className="rounded-xl border-ink-20 bg-white/80 text-sm">
                           <SelectValue placeholder="Edad" />
                         </SelectTrigger>
-                        <SelectContent className="rounded-xl border border-primary/20 bg-white/95 shadow-lg">
+                        <SelectContent className="rounded-xl border border-ink-20 bg-white/95 shadow-lg">
                           <SelectItem value="young-adult">Joven adulto (20-30)</SelectItem>
                           <SelectItem value="adult">Adulto (30-45)</SelectItem>
                           <SelectItem value="middle-aged">Mediana edad (45-60)</SelectItem>
@@ -542,10 +542,10 @@ export default function OutfitsPage() {
                     <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground/70">Tipo de cuerpo</label>
                     <Select value={modelCharacteristics.bodyType} onValueChange={(value) => 
                       setModelCharacteristics(prev => ({...prev, bodyType: value}))}>
-                      <SelectTrigger className="rounded-xl border-primary/20 bg-white/80 text-sm">
+                      <SelectTrigger className="rounded-xl border-ink-20 bg-white/80 text-sm">
                         <SelectValue placeholder="Selecciona tipo de cuerpo" />
                       </SelectTrigger>
-                      <SelectContent className="rounded-xl border border-primary/20 bg-white/95 shadow-lg">
+                      <SelectContent className="rounded-xl border border-ink-20 bg-white/95 shadow-lg">
                         <SelectItem value="slim">Delgado</SelectItem>
                         <SelectItem value="athletic">Atlético</SelectItem>
                         <SelectItem value="average">Promedio</SelectItem>
@@ -556,10 +556,10 @@ export default function OutfitsPage() {
                   </div>
                 </div>
                 
-                <Alert className="border-primary/20 bg-primary/5 text-sm">
-                  <Info className="h-4 w-4 text-primary" />
+                <Alert className="border-ink-20 bg-ink-5 text-sm">
+                  <Info className="h-4 w-4 text-ink-500" />
                   <AlertDescription className="text-muted-foreground">
-                    <span className="font-semibold text-primary/80">Próximamente:</span> La generación de modelos personalizados estará disponible muy pronto.
+                    <span className="font-semibold text-ink-500/80">Próximamente:</span> La generación de modelos personalizados estará disponible muy pronto.
                     Mientras tanto, selecciona un modelo existente para continuar.
                   </AlertDescription>
                 </Alert>
@@ -598,7 +598,7 @@ export default function OutfitsPage() {
                         }
                       }}
                       className={`group relative flex h-full flex-col overflow-hidden rounded-3xl border border-transparent bg-white/85 shadow-md transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl focus:outline-none focus:ring-2 focus:ring-primary/40 ${
-                        isSelected ? 'border-primary/40 ring-2 ring-primary/30 shadow-xl' : ''
+                        isSelected ? 'border-ink-40 ring-2 ring-primary/30 shadow-xl' : ''
                       }`}
                     >
                       <div className="relative aspect-[3/4] w-full overflow-hidden">
@@ -608,7 +608,7 @@ export default function OutfitsPage() {
                           className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
                         />
                         {isSelected && (
-                          <div className="absolute left-4 top-4 flex items-center gap-2 rounded-full bg-white/85 px-3 py-1 text-sm font-medium text-primary">
+                          <div className="absolute left-4 top-4 flex items-center gap-2 rounded-full bg-white/85 px-3 py-1 text-sm font-medium text-ink-500">
                             <CheckCircle className="h-4 w-4" />
                             Seleccionada
                           </div>
@@ -617,7 +617,7 @@ export default function OutfitsPage() {
                           <Button
                             variant="outline"
                             size="icon"
-                            className="h-11 w-11 rounded-full border-primary/30 bg-white/90 text-primary shadow-sm transition hover:bg-primary/20"
+                            className="h-11 w-11 rounded-full border-ink-30 bg-white/90 text-ink-500 shadow-sm transition hover:bg-ink-20"
                             onClick={(event) => {
                               event.stopPropagation()
                               handleOpenPreview(garment.url, {
@@ -632,14 +632,14 @@ export default function OutfitsPage() {
                           </Button>
                         </div>
                       </div>
-                      <div className="flex items-center justify-between gap-3 border-t border-primary/10 bg-white/95 px-5 py-4">
+                      <div className="flex items-center justify-between gap-3 border-t border-ink-10 bg-white/95 px-5 py-4">
                         <div>
                           <p className="text-sm font-semibold text-foreground/90">Prenda #{index + 1}</p>
                           <p className="text-xs text-muted-foreground">Haz clic o presiona Enter para alternar la selección.</p>
                         </div>
                         <CheckCircle
                           className={`h-5 w-5 transition-colors ${
-                            isSelected ? 'text-primary' : 'text-muted-foreground/40'
+                            isSelected ? 'text-ink-500' : 'text-muted-foreground/40'
                           }`}
                         />
                       </div>
@@ -648,13 +648,13 @@ export default function OutfitsPage() {
                 })}
               </div>
             ) : (
-              <div className="rounded-3xl border border-dashed border-primary/20 bg-white/60 p-12 text-center shadow-inner">
-                <Shirt className="mb-4 h-12 w-12 mx-auto text-primary/60" />
+              <div className="rounded-3xl border border-dashed border-ink-20 bg-white/60 p-12 text-center shadow-inner">
+                <Shirt className="mb-4 h-12 w-12 mx-auto text-ink-500/60" />
                 <h3 className="mb-2 text-lg font-semibold text-foreground/90">No hay prendas disponibles</h3>
                 <p className="mb-5 text-sm text-muted-foreground">
                   Sube tus prendas para combinarlas en tus próximos looks.
                 </p>
-                <Button variant="outline" className="rounded-full border-primary/20 bg-white/80 text-primary hover:bg-primary/10">
+                <Button variant="outline" className="rounded-full border-ink-20 bg-white/80 text-ink-500 hover:bg-ink-10">
                   <Upload className="mr-2 h-4 w-4" />
                   Ir a Prendas
                 </Button>
@@ -662,8 +662,8 @@ export default function OutfitsPage() {
             )}
             
             {selectedGarments.length > 0 && (
-              <Alert className="border-primary/20 bg-primary/5 text-sm">
-                <Info className="h-4 w-4 text-primary" />
+              <Alert className="border-ink-20 bg-ink-5 text-sm">
+                <Info className="h-4 w-4 text-ink-500" />
                 <AlertDescription className="text-muted-foreground">
                   {selectedGarments.length} prenda{selectedGarments.length !== 1 ? 's' : ''} seleccionada{selectedGarments.length !== 1 ? 's' : ''}. Añade varias piezas para crear outfits más completos.
                 </AlertDescription>
@@ -675,7 +675,7 @@ export default function OutfitsPage() {
       case 'style':
         return (
           <div className="space-y-6">
-            <div className="flex items-center justify-between rounded-2xl border border-primary/20 bg-white/70 px-5 py-4 shadow-inner">
+            <div className="flex items-center justify-between rounded-2xl border border-ink-20 bg-white/70 px-5 py-4 shadow-inner">
               <div className="space-y-1">
                 <label className="text-sm font-semibold text-foreground/90">Configuración avanzada de estilo</label>
                 <p className="text-xs text-muted-foreground">
@@ -689,15 +689,15 @@ export default function OutfitsPage() {
             </div>
             
             {useAdvancedStyle && (
-              <div className="grid gap-6 rounded-2xl border border-primary/20 bg-white/70 p-6 shadow-inner">
+              <div className="grid gap-6 rounded-2xl border border-ink-20 bg-white/70 p-6 shadow-inner">
                 <div className="space-y-2">
                   <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground/70">Estilo de outfit</label>
                   <Select value={stylePreferences.style} onValueChange={(value) =>
                     setStylePreferences(prev => ({...prev, style: value}))}>
-                    <SelectTrigger className="rounded-xl border-primary/20 bg-white/80 text-sm">
+                    <SelectTrigger className="rounded-xl border-ink-20 bg-white/80 text-sm">
                       <SelectValue placeholder="Selecciona un estilo" />
                     </SelectTrigger>
-                    <SelectContent className="rounded-xl border border-primary/20 bg-white/95 shadow-lg">
+                    <SelectContent className="rounded-xl border border-ink-20 bg-white/95 shadow-lg">
                       <SelectItem value="casual">Casual</SelectItem>
                       <SelectItem value="formal">Formal</SelectItem>
                       <SelectItem value="business">Empresarial</SelectItem>
@@ -714,10 +714,10 @@ export default function OutfitsPage() {
                   <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground/70">Temporada</label>
                   <Select value={stylePreferences.season} onValueChange={(value) =>
                     setStylePreferences(prev => ({...prev, season: value}))}>
-                    <SelectTrigger className="rounded-xl border-primary/20 bg-white/80 text-sm">
+                    <SelectTrigger className="rounded-xl border-ink-20 bg-white/80 text-sm">
                       <SelectValue placeholder="Selecciona temporada" />
                     </SelectTrigger>
-                    <SelectContent className="rounded-xl border border-primary/20 bg-white/95 shadow-lg">
+                    <SelectContent className="rounded-xl border border-ink-20 bg-white/95 shadow-lg">
                       <SelectItem value="any">Cualquier temporada</SelectItem>
                       <SelectItem value="spring">Primavera</SelectItem>
                       <SelectItem value="summer">Verano</SelectItem>
@@ -732,15 +732,15 @@ export default function OutfitsPage() {
             {/* Opciones adicionales del outfit - siempre visibles */}
             <div className="space-y-4">
               <h4 className="text-sm font-semibold text-foreground/90 flex items-center gap-2">
-                <div className="rounded-lg bg-primary/10 p-1.5">
-                  <Shirt className="h-4 w-4 text-primary" />
+                <div className="rounded-lg bg-ink-10 p-1.5">
+                  <Shirt className="h-4 w-4 text-ink-500" />
                 </div>
                 Opciones de generación
               </h4>
               
-              <div className="grid gap-4 rounded-2xl border border-primary/20 bg-white/70 p-5 shadow-inner">
+              <div className="grid gap-4 rounded-2xl border border-ink-20 bg-white/70 p-5 shadow-inner">
                 <div className="grid gap-3 sm:grid-cols-2">
-                  <div className="flex items-center justify-between gap-3 rounded-xl border border-primary/15 bg-white/80 px-4 py-3">
+                  <div className="flex items-center justify-between gap-3 rounded-xl border border-ink-15 bg-white/80 px-4 py-3">
                     <div className="space-y-0.5">
                       <label className="text-sm font-medium text-foreground/90">Cuerpo completo</label>
                       <p className="text-xs text-muted-foreground">Mostrar figura completa del modelo</p>
@@ -753,7 +753,7 @@ export default function OutfitsPage() {
                     />
                   </div>
                   
-                  <div className="flex items-center justify-between gap-3 rounded-xl border border-primary/15 bg-white/80 px-4 py-3">
+                  <div className="flex items-center justify-between gap-3 rounded-xl border border-ink-15 bg-white/80 px-4 py-3">
                     <div className="space-y-0.5">
                       <label className="text-sm font-medium text-foreground/90">Mostrar zapatos</label>
                       <p className="text-xs text-muted-foreground">Incluir calzado en la imagen</p>
@@ -766,7 +766,7 @@ export default function OutfitsPage() {
                     />
                   </div>
                   
-                  <div className="flex items-center justify-between gap-3 rounded-xl border border-primary/15 bg-white/80 px-4 py-3">
+                  <div className="flex items-center justify-between gap-3 rounded-xl border border-ink-15 bg-white/80 px-4 py-3">
                     <div className="space-y-0.5">
                       <label className="text-sm font-medium text-foreground/90">Ocultar gorros</label>
                       <p className="text-xs text-muted-foreground">Evitar sombreros y gorras</p>
@@ -779,7 +779,7 @@ export default function OutfitsPage() {
                     />
                   </div>
                   
-                  <div className="flex items-center justify-between gap-3 rounded-xl border border-primary/15 bg-white/80 px-4 py-3">
+                  <div className="flex items-center justify-between gap-3 rounded-xl border border-ink-15 bg-white/80 px-4 py-3">
                     <div className="space-y-0.5">
                       <label className="text-sm font-medium text-foreground/90">Adaptar zapatos</label>
                       <p className="text-xs text-muted-foreground">Coordinar calzado con el look</p>
@@ -792,7 +792,7 @@ export default function OutfitsPage() {
                     />
                   </div>
                   
-                  <div className="flex items-center justify-between gap-3 rounded-xl border border-primary/15 bg-white/80 px-4 py-3">
+                  <div className="flex items-center justify-between gap-3 rounded-xl border border-ink-15 bg-white/80 px-4 py-3">
                     <div className="space-y-0.5">
                       <label className="text-sm font-medium text-foreground/90">Quitar gafas de sol</label>
                       <p className="text-xs text-muted-foreground">Eliminar gafas de sol del modelo</p>
@@ -805,7 +805,7 @@ export default function OutfitsPage() {
                     />
                   </div>
                   
-                  <div className="flex items-center justify-between gap-3 rounded-xl border border-primary/15 bg-white/80 px-4 py-3">
+                  <div className="flex items-center justify-between gap-3 rounded-xl border border-ink-15 bg-white/80 px-4 py-3">
                     <div className="space-y-0.5">
                       <label className="text-sm font-medium text-foreground/90">Solo prendas seleccionadas</label>
                       <p className="text-xs text-muted-foreground">Quitar toda la ropa original del modelo</p>
@@ -818,7 +818,7 @@ export default function OutfitsPage() {
                     />
                   </div>
                   
-                  <div className="space-y-2 rounded-xl border border-primary/15 bg-white/80 px-4 py-3">
+                  <div className="space-y-2 rounded-xl border border-ink-15 bg-white/80 px-4 py-3">
                     <div className="space-y-0.5">
                       <label className="text-sm font-medium text-foreground/90">Estilo fotográfico</label>
                       <p className="text-xs text-muted-foreground">Fondo e iluminación de la imagen</p>
@@ -845,11 +845,11 @@ export default function OutfitsPage() {
               </div>
             </div>
             
-            <Card className="border-none bg-gradient-to-br from-primary/10 via-white to-accent/20 shadow-sm">
+            <Card className="border-none bg-gradient-to-br from-ink-10 via-white to-accent/20 shadow-sm">
               <CardContent className="flex flex-col gap-4 px-6 py-5">
                 <div className="flex items-start gap-3">
                   <div className="rounded-xl bg-white/80 p-2.5 shadow-inner">
-                    <Palette className="h-5 w-5 text-primary" />
+                    <Palette className="h-5 w-5 text-ink-500" />
                   </div>
                   <div className="space-y-2">
                     <h4 className="text-sm font-semibold text-foreground/90">Resumen de tu outfit</h4>
@@ -891,9 +891,9 @@ export default function OutfitsPage() {
         
       case 'generate':
         return (
-          <div className="space-y-8 rounded-3xl border border-primary/10 bg-white/70 p-10 text-center shadow-inner">
-            <div className="mx-auto flex h-24 w-24 items-center justify-center rounded-3xl bg-gradient-to-br from-primary/20 via-primary/10 to-primary/5">
-              <Wand2 className={`h-12 w-12 text-primary ${loading ? 'animate-pulse' : ''}`} />
+          <div className="space-y-8 rounded-3xl border border-ink-10 bg-white/70 p-10 text-center shadow-inner">
+            <div className="mx-auto flex h-24 w-24 items-center justify-center rounded-3xl bg-gradient-to-br from-ink-20 via-ink-10 to-ink-5">
+              <Wand2 className={`h-12 w-12 text-ink-500 ${loading ? 'animate-pulse' : ''}`} />
             </div>
             <div className="space-y-2">
               <h3 className="text-2xl font-semibold text-foreground/90">
@@ -908,7 +908,7 @@ export default function OutfitsPage() {
 
             {loading && (
               <div className="mx-auto flex max-w-md flex-col gap-2 text-left">
-                <Progress value={generationProgress} className="h-2 rounded-full bg-primary/10" />
+                <Progress value={generationProgress} className="h-2 rounded-full bg-ink-10" />
                 <p className="text-xs font-medium text-muted-foreground">
                   {Math.round(generationProgress)}% completado
                 </p>
@@ -970,7 +970,7 @@ export default function OutfitsPage() {
                       }}
                       role="button"
                       tabIndex={0}
-                      className="group overflow-hidden rounded-3xl border border-transparent bg-white/80 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-primary/20 hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-primary/40 cursor-zoom-in"
+                      className="group overflow-hidden rounded-3xl border border-transparent bg-white/80 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-ink-20 hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-primary/40 cursor-zoom-in"
                     >
                       <div className="relative aspect-[3/4] overflow-hidden">
                         <img 
@@ -979,7 +979,7 @@ export default function OutfitsPage() {
                           className="h-full w-full object-cover transition duration-500 group-hover:scale-105" 
                         />
                         <div className="absolute right-3 top-3">
-                          <Badge className="rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
+                          <Badge className="rounded-full bg-ink-10 px-3 py-1 text-xs font-medium text-ink-500">
                             #{index + 1}
                           </Badge>
                         </div>
@@ -997,7 +997,7 @@ export default function OutfitsPage() {
                           onClick={(event) => {
                             event.stopPropagation()
                           }}
-                          className="rounded-full border-primary/20 bg-white/80 text-primary transition hover:bg-primary/10"
+                          className="rounded-full border-ink-20 bg-white/80 text-ink-500 transition hover:bg-ink-10"
                         >
                           <Star className="h-4 w-4" />
                         </Button>
@@ -1010,14 +1010,14 @@ export default function OutfitsPage() {
                   <Button
                     variant="outline"
                     onClick={resetWizard}
-                    className="rounded-full border-primary/20 bg-white/80 px-6 text-primary hover:bg-primary/10"
+                    className="rounded-full border-ink-20 bg-white/80 px-6 text-ink-500 hover:bg-ink-10"
                   >
                     Crear Nuevo Outfit
                   </Button>
                   <Button
                     onClick={handleDownloadAll}
                     disabled={downloadingAll}
-                    className="rounded-full bg-primary px-6 py-2 text-sm font-semibold text-primary-foreground shadow-lg transition hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-70"
+                    className="rounded-full bg-blush-400 px-6 py-2 text-sm font-semibold text-white hover:bg-blush-500 shadow-lg transition hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-70"
                   >
                     {downloadingAll ? (
                       <>
@@ -1034,7 +1034,7 @@ export default function OutfitsPage() {
                 </div>
               </>
             ) : (
-              <div className="rounded-3xl border border-dashed border-primary/20 bg-white/70 p-12 text-center shadow-inner">
+              <div className="rounded-3xl border border-dashed border-ink-20 bg-white/70 p-12 text-center shadow-inner">
                 <AlertTriangle className="mb-4 h-12 w-12 mx-auto text-destructive" />
                 <h3 className="mb-2 text-lg font-semibold text-foreground/90">No se pudieron generar outfits</h3>
                 <p className="mb-5 text-sm text-muted-foreground">
@@ -1043,7 +1043,7 @@ export default function OutfitsPage() {
                 <Button
                   variant="outline"
                   onClick={() => setCurrentStep('style')}
-                  className="rounded-full border-primary/20 bg-white/80 text-primary hover:bg-primary/10"
+                  className="rounded-full border-ink-20 bg-white/80 text-ink-500 hover:bg-ink-10"
                 >
                   Intentar de nuevo
                 </Button>
@@ -1064,11 +1064,11 @@ export default function OutfitsPage() {
             {/* Header */}
             <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex items-center gap-4">
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-primary/20 via-primary/10 to-primary/5 shadow-inner">
-                  <Wand2 className="h-5 w-5 text-primary" />
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-ink-100 shadow-inner">
+                  <Wand2 className="h-5 w-5 text-ink-500" />
                 </div>
                 <div>
-                  <h1 className="text-3xl font-semibold tracking-tight text-foreground/90">Crear Outfit</h1>
+                  <h1 className="text-3xl font-semibold tracking-tight text-ink-500">Crear Outfit</h1>
                   <p className="text-sm text-muted-foreground">
                     Asistente guiado con IA para construir looks modernos y minimalistas
                   </p>
@@ -1078,7 +1078,7 @@ export default function OutfitsPage() {
                 variant="outline"
                 size="sm"
                 onClick={resetWizard}
-                className="rounded-full border-primary/20 bg-white/80 px-5 text-primary shadow-sm transition hover:border-primary/30 hover:bg-primary/10"
+                className="rounded-full border-ink-20 bg-white/80 px-5 text-ink-500 shadow-sm transition hover:border-ink-30 hover:bg-ink-10"
               >
                 Reiniciar
               </Button>
@@ -1099,7 +1099,7 @@ export default function OutfitsPage() {
                           <div
                             className={`flex h-12 w-12 items-center justify-center rounded-2xl border text-sm font-medium transition-all duration-300 ${
                               isActive
-                                ? 'border-primary/20 bg-primary text-white shadow-lg'
+                                ? 'border-ink-200 bg-ink-500 text-white shadow-lg'
                                 : isCompleted
                                   ? 'border-emerald-200 bg-emerald-100 text-emerald-700 shadow-inner'
                                   : 'border-border/70 bg-white text-muted-foreground shadow-inner'
@@ -1115,7 +1115,7 @@ export default function OutfitsPage() {
                             <p
                               className={`text-sm font-medium ${
                                 isActive
-                                  ? 'text-primary'
+                                  ? 'text-ink-500'
                                   : isCompleted
                                     ? 'text-emerald-600'
                                     : 'text-muted-foreground'
@@ -1130,7 +1130,7 @@ export default function OutfitsPage() {
                         </div>
                         {index < steps.length - 1 && (
                           <div className="hidden flex-1 md:block">
-                            <div className="h-px w-full rounded-full bg-gradient-to-r from-transparent via-primary/25 to-transparent" />
+                            <div className="h-px w-full rounded-full bg-gradient-to-r from-transparent via-ink-25 to-transparent" />
                           </div>
                         )}
                       </div>
@@ -1144,7 +1144,7 @@ export default function OutfitsPage() {
               <Card className="order-1 border-none bg-white/90 shadow-xl  backdrop-blur">
                 <CardHeader className="space-y-2 pb-4">
                   <CardTitle className="flex items-center gap-3 text-xl font-semibold text-foreground/90">
-                    {React.createElement(steps.find(s => s.step === currentStep)?.icon || Wand2, { className: 'h-5 w-5 text-primary' })}
+                    {React.createElement(steps.find(s => s.step === currentStep)?.icon || Wand2, { className: 'h-5 w-5 text-ink-500' })}
                     {steps.find(s => s.step === currentStep)?.title}
                   </CardTitle>
                   <CardDescription className="text-sm text-muted-foreground/80">
@@ -1159,21 +1159,21 @@ export default function OutfitsPage() {
               </Card>
 
               {showVariantSettings && (
-                <Card className="order-2 border-none bg-gradient-to-br from-primary/10 via-white to-blue-50/70 shadow-md  backdrop-blur-sm">
+                <Card className="order-2 border-none bg-gradient-to-br from-ink-10 via-white to-blue-50/70 shadow-md  backdrop-blur-sm">
                   <CardContent className="flex flex-col gap-5 px-5 py-6">
                     <div className="flex items-start gap-3">
                       <div className="rounded-xl bg-white/80 p-3 shadow-inner">
-                        <Camera className="h-5 w-5 text-primary" />
+                        <Camera className="h-5 w-5 text-ink-500" />
                       </div>
                       <div className="space-y-1">
-                        <h3 className="text-sm font-semibold text-primary/90">Configuración de Variantes</h3>
+                        <h3 className="text-sm font-semibold text-ink-500/90">Configuración de Variantes</h3>
                         <p className="text-xs text-muted-foreground">
                           Controla cuántas imágenes generará la IA y cómo variará cada una.
                         </p>
                       </div>
                     </div>
 
-                    <div className="rounded-2xl border border-primary/20 bg-white/80 p-4 shadow-inner">
+                    <div className="rounded-2xl border border-ink-20 bg-white/80 p-4 shadow-inner">
                       <div className="flex items-center justify-between gap-2">
                         <div className="flex items-center gap-2">
                           <Button
@@ -1181,7 +1181,7 @@ export default function OutfitsPage() {
                             size="icon"
                             onClick={() => updateVariantCount(Math.max(1, variants - 1))}
                             disabled={variants <= 1}
-                            className="h-9 w-9 rounded-full border-primary/20 text-primary hover:bg-primary/10"
+                            className="h-9 w-9 rounded-full border-ink-20 text-ink-500 hover:bg-ink-10"
                           >
                             -
                           </Button>
@@ -1193,12 +1193,12 @@ export default function OutfitsPage() {
                             size="icon"
                             onClick={() => updateVariantCount(Math.min(4, variants + 1))}
                             disabled={variants >= 4}
-                            className="h-9 w-9 rounded-full border-primary/20 text-primary hover:bg-primary/10"
+                            className="h-9 w-9 rounded-full border-ink-20 text-ink-500 hover:bg-ink-10"
                           >
                             +
                           </Button>
                         </div>
-                        <Badge className="rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
+                        <Badge className="rounded-full bg-ink-10 px-3 py-1 text-xs font-medium text-ink-500">
                           {variants === 1 ? 'Básico' : `${variants} variantes`}
                         </Badge>
                       </div>
@@ -1211,14 +1211,14 @@ export default function OutfitsPage() {
 
                     {variants > 1 && (
                       <div className="space-y-3">
-                        <div className="rounded-xl border border-primary/20 bg-white/70 p-3 text-xs font-medium text-muted-foreground">
+                        <div className="rounded-xl border border-ink-20 bg-white/70 p-3 text-xs font-medium text-muted-foreground">
                           Imagen 1: <span className="text-foreground/80">Original (frontal, iluminación neutral)</span>
                         </div>
                         {variantConfigs.map((config) => (
-                          <div key={config.id} className="grid gap-3 rounded-2xl border border-primary/20 bg-white/90 p-3 shadow-sm">
+                          <div key={config.id} className="grid gap-3 rounded-2xl border border-ink-20 bg-white/90 p-3 shadow-sm">
                             <div className="flex items-center justify-between text-sm font-medium text-foreground/80">
                               <span>Imagen {config.id}</span>
-                              <Badge className="rounded-full bg-primary/10 px-2 py-0.5 text-[11px] text-primary">
+                              <Badge className="rounded-full bg-ink-10 px-2 py-0.5 text-[11px] text-ink-500">
                                 {VARIANT_OPTIONS[config.type].icon}
                               </Badge>
                             </div>
@@ -1226,10 +1226,10 @@ export default function OutfitsPage() {
                               value={config.type}
                               onValueChange={(value: VariantType) => updateVariantConfig(config.id, value)}
                             >
-                              <SelectTrigger className="rounded-xl border-primary/20 bg-white/70 text-sm">
+                              <SelectTrigger className="rounded-xl border-ink-20 bg-white/70 text-sm">
                                 <SelectValue />
                               </SelectTrigger>
-                              <SelectContent className="rounded-xl border border-primary/20 bg-white/95 shadow-lg">
+                              <SelectContent className="rounded-xl border border-ink-20 bg-white/95 shadow-lg">
                                 {Object.entries(VARIANT_OPTIONS).map(([key, option]) => (
                                   <SelectItem key={key} value={key}>
                                     <div className="flex items-center gap-2">
@@ -1241,11 +1241,11 @@ export default function OutfitsPage() {
                               </SelectContent>
                             </Select>
                             <Tooltip>
-                              <TooltipTrigger className="flex items-center gap-2 text-xs text-muted-foreground hover:text-primary">
+                              <TooltipTrigger className="flex items-center gap-2 text-xs text-muted-foreground hover:text-ink-500">
                                 <Info className="h-4 w-4" />
                                 Detalles de la variación
                               </TooltipTrigger>
-                              <TooltipContent className="max-w-xs rounded-xl border border-primary/10 bg-white/95 text-xs text-muted-foreground">
+                              <TooltipContent className="max-w-xs rounded-xl border border-ink-10 bg-white/95 text-xs text-muted-foreground">
                                 {VARIANT_OPTIONS[config.type].description}
                               </TooltipContent>
                             </Tooltip>
@@ -1258,12 +1258,12 @@ export default function OutfitsPage() {
               )}
             </div>
 
-            <div className="flex flex-col gap-4 border-t border-primary/10 pt-6 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex flex-col gap-4 border-t border-ink-10 pt-6 sm:flex-row sm:items-center sm:justify-between">
               <Button
                 variant="outline"
                 onClick={prevStep}
                 disabled={currentStep === 'model' || loading}
-                className="flex items-center gap-2 rounded-full border-primary/20 bg-white/80 px-5 text-primary shadow-sm transition hover:border-primary/30 hover:bg-primary/10"
+                className="flex items-center gap-2 rounded-full border-ink-20 bg-white/80 px-5 text-ink-500 shadow-sm transition hover:border-ink-30 hover:bg-ink-10"
               >
                 <ArrowLeft className="h-4 w-4" />
                 Anterior
@@ -1274,7 +1274,7 @@ export default function OutfitsPage() {
                   <Button
                     onClick={generateOutfit}
                     disabled={!canProceed() || loading}
-                    className="flex items-center gap-2 rounded-full bg-primary px-6 py-2 text-sm font-semibold text-primary-foreground shadow-lg transition hover:shadow-xl"
+                    className="flex items-center gap-2 rounded-full bg-blush-400 px-6 py-2 text-sm font-semibold text-white hover:bg-blush-500 shadow-lg transition hover:shadow-xl"
                     size="lg"
                   >
                     <Wand2 className="h-4 w-4" />
@@ -1284,7 +1284,7 @@ export default function OutfitsPage() {
                   <Button
                     onClick={generateOutfit}
                     disabled={loading}
-                    className="flex items-center gap-2 rounded-full bg-primary px-6 py-2 text-sm font-semibold text-primary-foreground shadow-lg transition hover:shadow-xl"
+                    className="flex items-center gap-2 rounded-full bg-blush-400 px-6 py-2 text-sm font-semibold text-white hover:bg-blush-500 shadow-lg transition hover:shadow-xl"
                     size="lg"
                   >
                     {loading ? (
@@ -1303,7 +1303,7 @@ export default function OutfitsPage() {
                   <Button
                     onClick={nextStep}
                     disabled={!canProceed() || loading}
-                    className="flex items-center gap-2 rounded-full bg-primary px-6 py-2 text-sm font-semibold text-primary-foreground shadow-lg transition hover:shadow-xl"
+                    className="flex items-center gap-2 rounded-full bg-blush-400 px-6 py-2 text-sm font-semibold text-white hover:bg-blush-500 shadow-lg transition hover:shadow-xl"
                   >
                     Continuar
                     <ArrowRight className="h-4 w-4" />
@@ -1326,14 +1326,14 @@ export default function OutfitsPage() {
                   {previewSubtitle || 'Observa la propuesta en grande y guárdala cuando quieras.'}
                 </p>
               </DialogHeader>
-              <div className="flex max-h-[70vh] items-center justify-center bg-gradient-to-br from-primary/5 via-white to-white px-4 py-6">
+              <div className="flex max-h-[70vh] items-center justify-center bg-gradient-to-br from-ink-5 via-white to-white px-4 py-6">
                 <img
                   src={previewUrl}
                   alt={previewTitle}
                   className="max-h-[64vh] w-full rounded-2xl border border-white/70 object-contain shadow-inner"
                 />
               </div>
-              <div className="flex flex-col gap-3 border-t border-primary/10 bg-white/95 px-6 py-4 text-sm sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex flex-col gap-3 border-t border-ink-10 bg-white/95 px-6 py-4 text-sm sm:flex-row sm:items-center sm:justify-between">
                 <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground">
                   {previewContext === 'outfit'
                     ? `Estilo ${stylePreferences.style}`
@@ -1345,7 +1345,7 @@ export default function OutfitsPage() {
                   <Button
                     variant="outline"
                     onClick={handleOpenImageInNewTab}
-                    className="rounded-full border-primary/20 bg-white/80 text-primary hover:bg-primary/10"
+                    className="rounded-full border-ink-20 bg-white/80 text-ink-500 hover:bg-ink-10"
                   >
                     Abrir en pestaña nueva
                   </Button>
@@ -1353,11 +1353,11 @@ export default function OutfitsPage() {
                     <Button
                       onClick={handleDownloadSingle}
                       disabled={downloadingSingle}
-                      className="rounded-full bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground shadow-md transition hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-70"
+                      className="rounded-full bg-ink-500 px-5 py-2 text-sm font-semibold text-white hover:bg-ink-600 shadow-md transition hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-70"
                     >
                       {downloadingSingle ? (
                         <>
-                          <div className="mr-2 h-4 w-4 animate-spin rounded-full border-[2px] border-primary-foreground border-t-transparent" />
+                          <div className="mr-2 h-4 w-4 animate-spin rounded-full border-[2px] border-white border-t-transparent" />
                           Descargando...
                         </>
                       ) : (

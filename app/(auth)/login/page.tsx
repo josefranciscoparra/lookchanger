@@ -1,12 +1,12 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 import { createClient } from '@/lib/supabase/client'
 
-export default function LoginPage() {
+function LoginForm() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
@@ -58,16 +58,16 @@ export default function LoginPage() {
 
   if (!mounted) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-lookah-background to-lookah-accent-blue">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-lookah-purple"></div>
+      <div className="min-h-screen flex items-center justify-center bg-surface">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-ink-500"></div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-lookah-background to-lookah-accent-blue py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen flex items-center justify-center bg-surface py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
-        <div className="bg-lookah-white/80 backdrop-blur-sm p-8 rounded-2xl shadow-xl border border-lookah-purple-light/20">
+        <div className="bg-white p-8 rounded-2xl shadow-xl border border-gray-200">
           <div className="text-center mb-8">
             <div className="flex justify-center mb-6">
               <Image 
@@ -78,7 +78,7 @@ export default function LoginPage() {
                 className="object-contain"
               />
             </div>
-            <h2 className="text-3xl font-extrabold text-gray-800 bg-gradient-to-r from-lookah-purple to-lookah-purple-dark bg-clip-text text-transparent">
+            <h2 className="text-3xl font-extrabold text-ink-500">
               ¡Bienvenido de vuelta!
             </h2>
             <p className="mt-2 text-gray-600">
@@ -110,7 +110,7 @@ export default function LoginPage() {
                   type="email"
                   autoComplete="email"
                   required
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-lookah-purple focus:border-lookah-purple transition-colors text-gray-900 placeholder-gray-400"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-ink-300 focus:border-ink-300 transition-colors text-gray-900 placeholder-gray-400"
                   placeholder="tu@email.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
@@ -127,7 +127,7 @@ export default function LoginPage() {
                   type="password"
                   autoComplete="current-password"
                   required
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-lookah-purple focus:border-lookah-purple transition-colors text-gray-900 placeholder-gray-400"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-ink-300 focus:border-ink-300 transition-colors text-gray-900 placeholder-gray-400"
                   placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
@@ -139,7 +139,7 @@ export default function LoginPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-[#FCBAD3] hover:bg-[#fb9ac1] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#FCBAD3] disabled:opacity-50 disabled:cursor-not-allowed transform transition-all duration-200 hover:scale-105 shadow-lg"
+                className="w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-blush-400 hover:bg-blush-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blush-100 disabled:opacity-50 disabled:cursor-not-allowed transform transition-all duration-200 hover:scale-105 shadow-lg"
               >
                 {loading ? (
                   <div className="flex items-center">
@@ -156,7 +156,7 @@ export default function LoginPage() {
           {process.env.NEXT_PUBLIC_DISABLE_SIGNUP !== 'true' && (
             <p className="mt-6 text-center text-sm text-gray-600">
               ¿No tienes cuenta?{' '}
-              <Link href="/signup" className="font-medium text-lookah-purple hover:text-lookah-purple-dark transition-colors">
+              <Link href="/signup" className="font-medium text-ink-500 hover:text-ink-600 transition-colors">
                 Regístrate aquí
               </Link>
             </p>
@@ -164,5 +164,17 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-surface">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-ink-500"></div>
+      </div>
+    }>
+      <LoginForm />
+    </Suspense>
   )
 }

@@ -50,11 +50,11 @@ export default function GarmentsPage() {
         <div className="space-y-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-green-100 rounded-full">
-                <Shirt className="h-6 w-6 text-green-600" />
+              <div className="p-2 bg-ink-100 rounded-full">
+                <Shirt className="h-6 w-6 text-ink-500" />
               </div>
               <div>
-                <h1 className="text-3xl font-bold">Colección de Prendas</h1>
+                <h1 className="text-3xl font-bold text-ink-500">Colección de Prendas</h1>
                 <p className="text-muted-foreground">Organiza tu armario virtual para crear looks únicos</p>
               </div>
             </div>

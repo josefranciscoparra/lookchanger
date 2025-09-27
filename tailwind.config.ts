@@ -62,14 +62,6 @@ const config: Config = {
   				border: 'hsl(var(--sidebar-border))',
   				ring: 'hsl(var(--sidebar-ring))'
   			},
-  			lookah: {
-  				purple: '#CC6CE5',
-  				'purple-light': '#db97ed',
-  				'purple-dark': '#bd41dd',
-  				background: '#f7fbfc',
-  				'accent-blue': '#d2e8ee',
-  				white: '#ffffff'
-  			},
   			ink: {
   				50: '#F2F4F8',
   				100: '#E6EAF2',
@@ -95,7 +87,7 @@ const config: Config = {
   				primary: '#111827',
   				secondary: '#6B7280'
   			},
-  			border: '#E5E7EB',
+  			'border-custom': '#E5E7EB',
   			surface: '#F9FAFB'
   		},
   		borderRadius: {

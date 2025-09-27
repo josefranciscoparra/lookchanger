@@ -5,12 +5,12 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 
 const categoryInfo = {
-  tops: { name: 'Tops', icon: '👕', color: 'bg-red-100 text-red-700', description: 'Camisetas, camisas, blusas' },
-  bottoms: { name: 'Pantalones', icon: '👖', color: 'bg-blue-100 text-blue-700', description: 'Pantalones, faldas, shorts' },
-  vestidos: { name: 'Vestidos', icon: '👗', color: 'bg-purple-100 text-purple-700', description: 'Vestidos y monos' },
-  calzado: { name: 'Calzado', icon: '👞', color: 'bg-green-100 text-green-700', description: 'Zapatos, botas, sandalias' },
-  abrigos: { name: 'Abrigos', icon: '🧥', color: 'bg-indigo-100 text-indigo-700', description: 'Chaquetas, abrigos, blazers' },
-  accesorios: { name: 'Accesorios', icon: '👜', color: 'bg-orange-100 text-orange-700', description: 'Bolsos, cinturones, joyas' },
+  tops: { name: 'Tops', icon: '👕', color: 'bg-ink-100 text-ink-700', description: 'Camisetas, camisas, blusas' },
+  bottoms: { name: 'Pantalones', icon: '👖', color: 'bg-slate-100 text-slate-700', description: 'Pantalones, faldas, shorts' },
+  vestidos: { name: 'Vestidos', icon: '👗', color: 'bg-gray-100 text-gray-700', description: 'Vestidos y monos' },
+  calzado: { name: 'Calzado', icon: '👞', color: 'bg-zinc-100 text-zinc-700', description: 'Zapatos, botas, sandalias' },
+  abrigos: { name: 'Abrigos', icon: '🧥', color: 'bg-stone-100 text-stone-700', description: 'Chaquetas, abrigos, blazers' },
+  accesorios: { name: 'Accesorios', icon: '👜', color: 'bg-neutral-100 text-neutral-700', description: 'Bolsos, cinturones, joyas' },
 }
 
 export function CategoryStats() {
