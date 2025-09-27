@@ -1,7 +1,25 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { createClient } from '@/lib/supabase/client'
-import type { User } from '@supabase/supabase-js'
+import type { AuthChangeEvent, Session, Subscription, User } from '@supabase/supabase-js'
+
+const AUTH_CALLBACK_URL = '/api/auth/callback'
+let authSubscription: Subscription | null = null
+
+const syncAuthStateWithServer = async (event: AuthChangeEvent, session: Session | null) => {
+  try {
+    await fetch(AUTH_CALLBACK_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+      body: JSON.stringify({ event, session }),
+    })
+  } catch (error) {
+    console.error('Error synchronizing auth state:', error)
+  }
+}
 
 export interface Model {
   id?: string
@@ -161,13 +179,20 @@ export const useAppStore = create<AppState>()(
           const { data: { user } } = await supabase.auth.getUser()
           set({ user })
           
-          // Escuchar cambios de autenticación
-          supabase.auth.onAuthStateChange((event, session) => {
+          authSubscription?.unsubscribe()
+
+          // Escuchar cambios de autenticación y sincronizar cookies con el servidor
+          const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
             set({ user: session?.user ?? null })
+
             if (event === 'SIGNED_OUT') {
               set({ models: [], garments: [], isInitialized: false })
             }
+
+            await syncAuthStateWithServer(event, session)
           })
+
+          authSubscription = subscription
         } finally {
           set({ isAuthLoading: false })
         }

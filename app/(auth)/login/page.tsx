@@ -23,7 +23,7 @@ export default function LoginPage() {
     setError('')
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       })
@@ -31,8 +31,21 @@ export default function LoginPage() {
       if (error) {
         setError(error.message)
       } else {
-        router.push(redirectTo)
-        router.refresh()
+        if (data.session) {
+          try {
+            await fetch('/api/auth/callback', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              credentials: 'include',
+              body: JSON.stringify({ event: 'SIGNED_IN', session: data.session }),
+            })
+          } catch (syncError) {
+            console.error('Error synchronizing auth state:', syncError)
+          }
+        }
+        window.location.assign(redirectTo)
       }
     } catch (err) {
       setError('Error inesperado al iniciar sesión')
