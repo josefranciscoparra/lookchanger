@@ -78,14 +78,14 @@ export function AppSidebar() {
   return (
     <Sidebar collapsible="icon">
       <SidebarHeader>
-        <div className="flex items-start justify-start pl-4 pr-1 pt-1 pb-0">
-          <Link href="/" className="flex items-center justify-center w-28 h-28 overflow-hidden cursor-pointer">
+        <div className="flex items-center justify-center px-4 py-4">
+          <Link href="/" className="flex items-center justify-center cursor-pointer">
             <Image 
-              src="/logoLookah3.png" 
+              src="/logotransparente.png" 
               alt="Lookah Logo" 
-              width={144}
-              height={144}
-              className="w-full h-full object-cover scale-105"
+              width={160}
+              height={80}
+              className="object-contain"
               priority
             />
           </Link>

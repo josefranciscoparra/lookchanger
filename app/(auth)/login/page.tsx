@@ -71,7 +71,7 @@ export default function LoginPage() {
           <div className="text-center mb-8">
             <div className="flex justify-center mb-6">
               <Image 
-                src="/logoLookah3.png" 
+                src="/logotransparente.png" 
                 alt="Lookah Logo" 
                 width={160} 
                 height={100} 
@@ -139,7 +139,7 @@ export default function LoginPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-gradient-to-r from-lookah-purple to-lookah-purple-dark hover:from-lookah-purple-dark hover:to-lookah-purple focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-lookah-purple disabled:opacity-50 disabled:cursor-not-allowed transform transition-all duration-200 hover:scale-105 shadow-lg"
+                className="w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-[#FCBAD3] hover:bg-[#fb9ac1] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#FCBAD3] disabled:opacity-50 disabled:cursor-not-allowed transform transition-all duration-200 hover:scale-105 shadow-lg"
               >
                 {loading ? (
                   <div className="flex items-center">
