@@ -61,6 +61,14 @@ const config: Config = {
   				'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
   				border: 'hsl(var(--sidebar-border))',
   				ring: 'hsl(var(--sidebar-ring))'
+  			},
+  			lookah: {
+  				purple: '#CC6CE5',
+  				'purple-light': '#db97ed',
+  				'purple-dark': '#bd41dd',
+  				background: '#f7fbfc',
+  				'accent-blue': '#d2e8ee',
+  				white: '#ffffff'
   			}
   		},
   		borderRadius: {
