@@ -1,36 +1,22 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useState } from 'react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 
-export default function LoginPage() {
+interface LoginFormProps {
+  redirectTo: string
+  message?: string | null
+  allowSignup: boolean
+}
+
+function LoginForm({ redirectTo, message, allowSignup }: LoginFormProps) {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  const [mounted, setMounted] = useState(false)
-  
-  const router = useRouter()
-  const searchParams = useSearchParams()
+
   const supabase = createClient()
-
-  const redirectTo = searchParams.get('redirectTo') || '/'
-  const message = searchParams.get('message')
-
-  useEffect(() => {
-    setMounted(true)
-    
-    // Check if user is already logged in
-    const checkUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (user) {
-        router.replace('/')
-      }
-    }
-    checkUser()
-  }, [supabase, router])
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -38,29 +24,37 @@ export default function LoginPage() {
     setError('')
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       })
 
       if (error) {
         setError(error.message)
-      } else {
-        window.location.href = redirectTo
+        return
       }
+
+      if (data.session) {
+        try {
+          await fetch('/api/auth/callback', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            credentials: 'include',
+            body: JSON.stringify({ event: 'SIGNED_IN', session: data.session }),
+          })
+        } catch (syncError) {
+          console.error('Error synchronizing auth state:', syncError)
+        }
+      }
+
+      window.location.assign(redirectTo)
     } catch (err) {
       setError('Error inesperado al iniciar sesión')
     } finally {
       setLoading(false)
     }
-  }
-
-  if (!mounted) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-      </div>
-    )
   }
 
   return (
@@ -70,7 +64,7 @@ export default function LoginPage() {
           <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
             Iniciar Sesión
           </h2>
-          {process.env.NEXT_PUBLIC_DISABLE_SIGNUP !== 'true' && (
+          {allowSignup && (
             <p className="mt-2 text-center text-sm text-gray-600">
               O{' '}
               <Link href="/signup" className="font-medium text-blue-600 hover:text-blue-500">
@@ -79,20 +73,20 @@ export default function LoginPage() {
             </p>
           )}
         </div>
-        
+
         <form className="mt-8 space-y-6" onSubmit={handleLogin}>
           {message && (
             <div className="bg-orange-50 border border-orange-200 text-orange-700 px-4 py-3 rounded">
               {message}
             </div>
           )}
-          
+
           {error && (
             <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
               {error}
             </div>
           )}
-          
+
           <div className="space-y-4">
             <div>
               <label htmlFor="email" className="sr-only">
@@ -110,7 +104,7 @@ export default function LoginPage() {
                 onChange={(e) => setEmail(e.target.value)}
               />
             </div>
-            
+
             <div>
               <label htmlFor="password" className="sr-only">
                 Contraseña
@@ -143,3 +137,5 @@ export default function LoginPage() {
     </div>
   )
 }
+
+export default LoginForm
