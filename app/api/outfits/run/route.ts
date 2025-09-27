@@ -5,6 +5,7 @@ import { saveGeneratedImageToStorage } from '@/lib/storage'
 import { createClient } from '@/lib/supabase/server'
 
 export const runtime = 'nodejs'
+export const dynamic = 'force-dynamic'
 
 type VariantType = 'pose' | 'fit' | 'lighting' | 'angle' | 'accessories'
 

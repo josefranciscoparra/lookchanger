@@ -3,6 +3,7 @@ import { saveFilesToTmp } from '@/lib/storage'
 import { createClient } from '@/lib/supabase/server'
 
 export const runtime = 'nodejs'
+export const dynamic = 'force-dynamic'
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB
 const ALLOWED_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp']

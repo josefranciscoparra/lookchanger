@@ -101,8 +101,19 @@ Para monitorear el uso del API de Gemini:
 - ✅ Los usuarios existentes pueden seguir haciendo login normalmente
 - ✅ La funcionalidad principal de la app no se ve afectada
 - ✅ Es completamente reversible sin pérdida de datos
+- ✅ **Arreglado error de build en Vercel** añadiendo `export const dynamic = 'force-dynamic'` a todas las rutas API
 - ⚠️ Recuerda actualizar esta documentación cuando implementes Stripe
 - ⚠️ No olvides cambiar la variable a `false` cuando tengas el sistema de pagos listo
+
+## 🚀 Fix para Vercel Build Error
+
+Se añadió `export const dynamic = 'force-dynamic'` a todas las rutas API que usan autenticación de Supabase:
+- `/api/gallery/route.ts`
+- `/api/list/route.ts` 
+- `/api/upload/route.ts`
+- `/api/outfits/run/route.ts`
+
+Esto resuelve el error de build "couldn't be rendered statically because it used `cookies`".
 
 ## 🔗 Archivos Relacionados
 
