@@ -7,13 +7,16 @@ const inter = Inter({ subsets: ['latin'] })
 
 export const metadata = { 
   title: 'Lookah', 
-  description: 'Transforma tu estilo con inteligencia artificial - Pruébate ropa virtualmente' 
+  description: 'Transforma tu estilo con inteligencia artificial - Pruébate ropa virtualmente',
+  icons: {
+    icon: '/favicon.png',
+  }
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="es">
-      <body className={`${inter.className} min-h-screen bg-surface text-text-primary antialiased`}>
+      <body className={`${inter.className} min-h-screen`}>
         <AuthProvider>
           <ConditionalLayout>
             {children}
