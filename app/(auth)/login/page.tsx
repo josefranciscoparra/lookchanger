@@ -78,12 +78,6 @@ function LoginForm() {
                 className="object-contain"
               />
             </div>
-            <h2 className="text-3xl font-extrabold text-ink-500">
-              ¡Bienvenido de vuelta!
-            </h2>
-            <p className="mt-2 text-gray-600">
-              Inicia sesión en tu cuenta
-            </p>
           </div>
           
           <form className="space-y-6" onSubmit={handleLogin}>
