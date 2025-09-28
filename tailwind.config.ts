@@ -87,8 +87,6 @@ const config: Config = {
   				primary: '#111827',
   				secondary: '#6B7280'
   			},
-  			'border-custom': '#E5E7EB',
-  			border: '#E5E7EB',
   			surface: '#F9FAFB'
   		},
   		borderRadius: {
