@@ -79,6 +79,35 @@ export default function GalleryPage() {
     }
   }
 
+  const downloadAllImages = async (outputs: Output[], groupIndex: number) => {
+    try {
+      for (let i = 0; i < outputs.length; i++) {
+        const output = outputs[i]
+        const response = await fetch(output.image_url)
+        const blob = await response.blob()
+        const url = window.URL.createObjectURL(blob)
+        
+        const link = document.createElement('a')
+        link.href = url
+        link.download = `generacion-${groupIndex + 1}-variante-${i + 1}-${Date.now()}.png`
+        document.body.appendChild(link)
+        link.click()
+        document.body.removeChild(link)
+        window.URL.revokeObjectURL(url)
+        
+        // Pequeño delay entre descargas para no saturar el navegador
+        if (i < outputs.length - 1) {
+          await new Promise(resolve => setTimeout(resolve, 100))
+        }
+      }
+      
+      // toast.success(`${outputs.length} imágenes descargadas exitosamente`)
+    } catch (error) {
+      console.error('Error downloading all images:', error)
+      // toast.error('Error al descargar las imágenes')
+    }
+  }
+
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleString('es-ES', {
       year: 'numeric',
@@ -166,11 +195,22 @@ export default function GalleryPage() {
                   <Calendar className="h-4 w-4" />
                   Generación {groupIndex + 1}
                 </CardTitle>
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Badge variant="outline">
-                    {formatCost(imageGroup.job.cost_cents)}
-                  </Badge>
-                  <span>{formatDate(imageGroup.job.created_at)}</span>
+                <div className="flex items-center gap-3">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => downloadAllImages(imageGroup.outputs, groupIndex)}
+                    className="h-8 w-8 p-0"
+                    title={`Descargar todas las imágenes (${imageGroup.outputs.length})`}
+                  >
+                    <Download className="h-4 w-4" />
+                  </Button>
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Badge variant="outline">
+                      {formatCost(imageGroup.job.cost_cents)}
+                    </Badge>
+                    <span>{formatDate(imageGroup.job.created_at)}</span>
+                  </div>
                 </div>
               </div>
               
