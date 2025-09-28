@@ -88,6 +88,7 @@ const config: Config = {
   				secondary: '#6B7280'
   			},
   			'border-custom': '#E5E7EB',
+  			border: '#E5E7EB',
   			surface: '#F9FAFB'
   		},
   		borderRadius: {
@@ -95,10 +96,11 @@ const config: Config = {
   			md: 'calc(var(--radius) - 2px)',
   			sm: 'calc(var(--radius) - 4px)',
   			xl: '0.9rem',
-  			'2xl': '1.25rem'
+  			'2xl': '1.25rem',
+  			'3xl': '1.5rem'
   		},
   		boxShadow: {
-  			card: '0 1px 2px rgba(0,0,0,0.04), 0 1px 1px rgba(0,0,0,0.02)',
+  			card: '0 8px 30px rgba(0,0,0,.06)',
   		},
   		keyframes: {
   			'accordion-down': {
