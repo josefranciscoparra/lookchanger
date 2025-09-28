@@ -35,6 +35,13 @@ export async function middleware(request: NextRequest) {
     return supabaseResponse
   }
 
+  // Redirección automática de la página principal a login
+  if (request.nextUrl.pathname === '/' && !user) {
+    const url = request.nextUrl.clone()
+    url.pathname = '/login'
+    return NextResponse.redirect(url)
+  }
+
   // Rutas que requieren autenticación
   const protectedPaths = ['/models', '/garments', '/outfits', '/gallery']
   const isProtectedPath = protectedPaths.some(path => request.nextUrl.pathname.startsWith(path))
