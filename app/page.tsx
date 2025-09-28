@@ -9,17 +9,17 @@ function IconStars() { return <svg width="28" height="28" viewBox="0 0 24 24" fi
 
 export default function Page() {
   return (
-    <main className="px-6 py-8">
+    <main className="px-4 py-6 md:px-6 md:py-8">
       {/* Hero */}
       <section className="max-w-3xl">
         <span className="inline-flex items-center text-xs font-medium text-text-secondary bg-white border border-border rounded-lg px-2 py-1 mb-3">
           ⚡ Potenciado por IA
         </span>
-        <h1 className="text-4xl font-bold tracking-tight mb-3 text-ink-500">Cambia tu look con IA</h1>
+        <h1 className="text-3xl md:text-4xl font-bold tracking-tight mb-3 text-ink-500">Cambia tu look con IA</h1>
         <p className="text-text-secondary mb-6">
           Sube modelos y prendas, y genera outfits en segundos. Un flujo simple con resultados profesionales.
         </p>
-        <div className="flex gap-3">
+        <div className="flex flex-col sm:flex-row gap-3">
           <Button variant="accent" asChild>
             <Link href="/outfits">Empezar ahora</Link>
           </Button>

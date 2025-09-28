@@ -65,12 +65,12 @@ export function WardrobeGallery({ onAddClick }: WardrobeGalleryProps) {
   return (
     <Card>
       <CardHeader>
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <CardTitle className="flex items-center gap-2">
             <Shirt className="h-5 w-5" />
             Tu Armario Virtual
           </CardTitle>
-          <Button variant="outline" size="sm" onClick={onAddClick}>
+          <Button variant="outline" size="sm" onClick={onAddClick} className="w-full sm:w-auto">
             <Plus className="mr-2 h-4 w-4" />
             Añadir Más
           </Button>
@@ -81,22 +81,23 @@ export function WardrobeGallery({ onAddClick }: WardrobeGalleryProps) {
       </CardHeader>
       <CardContent>
         <Tabs defaultValue="todas" className="w-full">
-          <TabsList className="grid w-full grid-cols-7">
-            <TabsTrigger value="todas" className="flex items-center gap-1">
+          <TabsList className="flex w-full overflow-x-auto scrollbar-hide gap-1 justify-start sm:grid sm:grid-cols-7">
+            <TabsTrigger value="todas" className="flex items-center gap-1 flex-shrink-0 min-w-fit px-3">
               <Tag className="h-3 w-3" />
-              Todas
+              <span className="hidden sm:inline">Todas</span>
+              <span className="sm:hidden">Todo</span>
             </TabsTrigger>
             {garmentCategories.map((category) => (
               <TabsTrigger 
                 key={category.key} 
                 value={category.key}
-                className="flex items-center gap-1"
+                className="flex items-center gap-1 flex-shrink-0 min-w-fit px-2 sm:px-3"
                 disabled={category.count === 0}
               >
-                <span className="text-xs">{category.icon}</span>
-                {category.name}
+                <span className="text-sm">{category.icon}</span>
+                <span className="hidden sm:inline">{category.name}</span>
                 {category.count > 0 && (
-                  <Badge variant="secondary" className="ml-1 text-xs">
+                  <Badge variant="secondary" className="ml-1 text-xs hidden sm:inline-flex">
                     {category.count}
                   </Badge>
                 )}
@@ -104,8 +105,8 @@ export function WardrobeGallery({ onAddClick }: WardrobeGalleryProps) {
             ))}
           </TabsList>
           
-          <TabsContent value="todas" className="mt-4">
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
+          <TabsContent value="todas" className="mt-6">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4">
               {garments.map((garment, index) => {
                 const categoryData = garment.category ? categoryInfo[garment.category] : null
                 return (
@@ -149,9 +150,9 @@ export function WardrobeGallery({ onAddClick }: WardrobeGalleryProps) {
           </TabsContent>
           
           {garmentCategories.map((category) => (
-            <TabsContent key={category.key} value={category.key} className="mt-4">
+            <TabsContent key={category.key} value={category.key} className="mt-6">
               {garmentsByCategory[category.key]?.length > 0 ? (
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4">
                   {garmentsByCategory[category.key].map((garment, index) => (
                     <div 
                       key={garment.url} 

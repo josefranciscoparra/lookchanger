@@ -2,6 +2,7 @@
 
 import { usePathname } from 'next/navigation'
 import { AppSidebar } from '@/components/app-sidebar'
+import { MobileHeader } from '@/components/mobile-header'
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar'
 
 interface ConditionalLayoutProps {
@@ -25,7 +26,8 @@ export function ConditionalLayout({ children }: ConditionalLayoutProps) {
     <SidebarProvider>
       <AppSidebar />
       <SidebarInset>
-        <main className="flex-1 space-y-4 p-6">
+        <MobileHeader />
+        <main className="flex-1 space-y-4 p-4 md:p-6">
           {children}
         </main>
       </SidebarInset>

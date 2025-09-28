@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react'
 import { useAppStore } from '@/lib/store'
 import { Stepper } from '@/components/ui/Stepper'
 import { Segmented } from '@/components/ui/Segmented'
-import { Button } from '@/components/ui/Button'
+import { Button } from '@/components/ui/button'
 import { ModelCard } from '@/components/ModelCard'
 import { GarmentCard } from '@/components/GarmentCard'
 import { EmptyState } from '@/components/EmptyState'
@@ -138,15 +138,15 @@ export default function CrearOutfitPage() {
       </div>
 
       {/* Stepper */}
-      <div className="mb-8">
+      <div className="mb-6 sm:mb-8">
         <Stepper steps={STEPS} current={step} />
       </div>
 
       {/* Paso 0: Seleccionar modelo */}
       {step === 0 && (
-        <section className="space-y-5">
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-ink-500">Seleccionar Modelo</h2>
+        <section className="space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <h2 className="text-lg font-semibold text-ink-500 hidden sm:block">Seleccionar Modelo</h2>
             <Segmented
               value={mode}
               onChange={(v)=>setMode(v as any)}
@@ -159,7 +159,7 @@ export default function CrearOutfitPage() {
 
           {mode === 'existente' ? (
             models.length ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
                 {models.map((m, index) => (
                   <div key={m.url} className="relative">
                     <ModelCard

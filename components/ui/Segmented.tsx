@@ -9,7 +9,7 @@ export function Segmented({
   const [local, setLocal] = useState(value ?? options[0]?.value)
   const current = value ?? local
   return (
-    <div className={cn("inline-flex bg-surface border border-border rounded-2xl p-1", className)} role="tablist">
+    <div className={cn("flex w-full sm:inline-flex bg-surface border border-border rounded-2xl p-1", className)} role="tablist">
       {options.map(o => {
         const active = o.value === current
         return (
@@ -18,12 +18,16 @@ export function Segmented({
             role="tab"
             aria-selected={active}
             className={cn(
-              "px-4 py-2 rounded-xl text-sm transition",
+              "px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm transition flex-1 sm:flex-none",
               active ? "bg-white shadow-card text-ink-500" : "text-text-secondary hover:text-text-primary"
             )}
             onClick={() => { setLocal(o.value); onChange?.(o.value) }}
           >
-            <span className="inline-flex items-center gap-2">{o.icon}{o.label}</span>
+            <span className="inline-flex items-center gap-1 sm:gap-2 justify-center">
+              {o.icon}
+              <span className="hidden sm:inline">{o.label}</span>
+              <span className="sm:hidden">{o.label.split(' ')[0]}</span>
+            </span>
           </button>
         )
       })}

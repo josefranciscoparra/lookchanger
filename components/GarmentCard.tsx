@@ -2,7 +2,7 @@
 import { cn } from '@/lib/utils'
 import { useId } from 'react'
 import { Eye } from 'lucide-react'
-import { Button } from '@/components/ui/Button'
+import { Button } from '@/components/ui/button'
 
 export function GarmentCard({
   img, title, category, selected, onSelect, onPreview

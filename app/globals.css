@@ -104,6 +104,15 @@ html, body, :root { height: 100%; }
   .wizard-animate {
     animation: wizard-step 0.45s ease forwards;
   }
+  
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
 }
 
 @keyframes wizard-step {

@@ -42,12 +42,12 @@ export function ModelsGallery({ onAddClick }: ModelsGalleryProps) {
   return (
     <Card>
       <CardHeader>
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <CardTitle className="flex items-center gap-2">
             <User className="h-5 w-5" />
             Galería de Modelos
           </CardTitle>
-          <Button variant="outline" size="sm" onClick={onAddClick}>
+          <Button variant="outline" size="sm" onClick={onAddClick} className="w-full sm:w-auto">
             <Plus className="mr-2 h-4 w-4" />
             Añadir Más
           </Button>
@@ -57,7 +57,7 @@ export function ModelsGallery({ onAddClick }: ModelsGalleryProps) {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4">
           {models.map((model, index) => (
             <div 
               key={model.url} 
