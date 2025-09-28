@@ -64,8 +64,8 @@ useEffect(() => {
 
 **Data Flow:**
 1. User uploads files → API saves to Supabase → Store updates
-2. Page navigation → Store persists data using Zustand persistence middleware
-3. App restart → Store loads from localStorage + API sync
+2. Page navigation → Store mantiene el estado en memoria mientras la app permanezca abierta
+3. App restart → Store arranca vacío y vuelve a sincronizar con Supabase
 
 ### Database Schema (Supabase)
 
