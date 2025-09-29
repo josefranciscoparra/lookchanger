@@ -436,23 +436,7 @@ export default function CrearOutfitPage() {
           <h2 className="text-lg font-semibold text-ink-500">Generar Outfit</h2>
 
           <div className="rounded-2xl border border-border bg-gradient-to-br from-white via-pink-50/30 to-rose-50/30 p-10 text-center shadow-card">
-            {loading ? (
-              <LoadingAnimation />
-            ) : (
-              <>
-                <div className="mx-auto flex h-24 w-24 items-center justify-center rounded-3xl bg-surface">
-                  <Wand2 className="h-12 w-12 text-ink-500" />
-                </div>
-                <div className="mt-8 space-y-2">
-                  <h3 className="text-2xl font-semibold text-ink-500">
-                    Todo listo para generar
-                  </h3>
-                  <p className="mx-auto max-w-md text-sm text-text-secondary">
-                    Haz clic en generar para obtener un conjunto personalizado.
-                  </p>
-                </div>
-              </>
-            )}
+            <LoadingAnimation />
 
             {error && (
               <Alert className="mx-auto mt-6 max-w-md border-destructive/30 bg-destructive/5 text-left text-sm">
