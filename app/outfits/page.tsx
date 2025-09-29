@@ -144,7 +144,7 @@ export default function CrearOutfitPage() {
 
       {/* Paso 0: Seleccionar modelo */}
       {step === 0 && (
-        <section className="space-y-6">
+        <section className={`space-y-6 ${mode === 'generar' ? 'lg:max-h-[400px]' : ''}`}>
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <h2 className="text-lg font-semibold text-ink-500 hidden sm:block">Seleccionar Modelo</h2>
             <Segmented

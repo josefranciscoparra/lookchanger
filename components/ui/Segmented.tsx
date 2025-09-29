@@ -9,7 +9,7 @@ export function Segmented({
   const [local, setLocal] = useState(value ?? options[0]?.value)
   const current = value ?? local
   return (
-    <div className={cn("flex w-full sm:inline-flex bg-surface border border-border rounded-2xl p-1", className)} role="tablist">
+    <div className={cn("flex w-full sm:inline-flex sm:w-auto bg-surface border border-border rounded-2xl p-1", className)} role="tablist">
       {options.map(o => {
         const active = o.value === current
         return (
