@@ -30,6 +30,7 @@ export async function GET(req: Request) {
         .from('garments')
         .select('id,image_url,created_at,category')
         .eq('user_id', user.id)
+        .eq('active', true)
         .order('created_at', { ascending: false })
 
       if (error) {
@@ -51,6 +52,7 @@ export async function GET(req: Request) {
       .from('models')
       .select('id,image_url,created_at')
       .eq('user_id', user.id)
+      .eq('active', true)
       .order('created_at', { ascending: false })
 
     if (error) {

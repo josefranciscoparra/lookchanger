@@ -3,16 +3,66 @@ import { useAppStore } from '@/lib/store'
 import { User, X, Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { useToast } from '@/hooks/use-toast'
+import { useState } from 'react'
 
 interface ModelsGalleryProps {
   onAddClick: () => void
 }
 
 export function ModelsGallery({ onAddClick }: ModelsGalleryProps) {
-  const { models, removeModel } = useAppStore()
+  const { models, removeModel, undoRemoveModel } = useAppStore()
+  const { toast } = useToast()
+  const [removingId, setRemovingId] = useState<string | null>(null)
 
-  const removeImage = (index: number) => {
-    removeModel(index)
+  const removeImage = async (id: string | undefined, index: number) => {
+    if (!id) {
+      console.error('No se puede eliminar: modelo sin ID')
+      return
+    }
+
+    setRemovingId(id)
+
+    try {
+      await removeModel(id)
+
+      // Mostrar toast con opción de deshacer
+      toast({
+        title: 'Modelo eliminado',
+        description: 'El modelo ha sido eliminado correctamente',
+        action: (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={async () => {
+              try {
+                await undoRemoveModel(id)
+                toast({
+                  title: 'Modelo restaurado',
+                  description: 'El modelo ha sido restaurado correctamente',
+                })
+              } catch (error) {
+                toast({
+                  title: 'Error',
+                  description: 'No se pudo restaurar el modelo',
+                  variant: 'destructive',
+                })
+              }
+            }}
+          >
+            Deshacer
+          </Button>
+        ),
+      })
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'No se pudo eliminar el modelo',
+        variant: 'destructive',
+      })
+    } finally {
+      setRemovingId(null)
+    }
   }
 
   if (models.length === 0) {
@@ -59,21 +109,22 @@ export function ModelsGallery({ onAddClick }: ModelsGalleryProps) {
       <CardContent>
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4">
           {models.map((model, index) => (
-            <div 
-              key={model.url} 
+            <div
+              key={model.id || model.url}
               className="group relative aspect-[3/4] rounded-lg overflow-hidden bg-muted hover:scale-[1.02] transition-transform duration-200"
             >
-              <img 
-                src={model.url} 
+              <img
+                src={model.url}
                 alt={`Modelo ${index + 1}`}
-                className="w-full h-full object-cover" 
+                className="w-full h-full object-cover"
               />
               <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-200" />
               <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                 <Button
                   size="sm"
                   variant="destructive"
-                  onClick={() => removeImage(index)}
+                  onClick={() => removeImage(model.id, index)}
+                  disabled={removingId === model.id}
                   className="h-8 w-8 p-0"
                   title="Eliminar modelo"
                 >

@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { useToast } from '@/hooks/use-toast'
 
 interface WardrobeGalleryProps {
   onAddClick: () => void
@@ -21,8 +22,10 @@ const categoryInfo = {
 }
 
 export function WardrobeGallery({ onAddClick }: WardrobeGalleryProps) {
-  const { garments, removeGarment, getGarmentsByCategory } = useAppStore()
-  
+  const { garments, removeGarment, undoRemoveGarment, getGarmentsByCategory } = useAppStore()
+  const { toast } = useToast()
+  const [removingId, setRemovingId] = useState<string | null>(null)
+
   const garmentsByCategory = getGarmentsByCategory()
   const garmentCategories = Object.entries(categoryInfo).map(([key, info]) => ({
     key: key as GarmentCategory,
@@ -33,8 +36,54 @@ export function WardrobeGallery({ onAddClick }: WardrobeGalleryProps) {
     description: info.description
   }))
 
-  const removeImage = (index: number) => {
-    removeGarment(index)
+  const removeImage = async (id: string | undefined, index: number) => {
+    if (!id) {
+      console.error('No se puede eliminar: prenda sin ID')
+      return
+    }
+
+    setRemovingId(id)
+
+    try {
+      await removeGarment(id)
+
+      // Mostrar toast con opción de deshacer
+      toast({
+        title: 'Prenda eliminada',
+        description: 'La prenda ha sido eliminada correctamente',
+        action: (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={async () => {
+              try {
+                await undoRemoveGarment(id)
+                toast({
+                  title: 'Prenda restaurada',
+                  description: 'La prenda ha sido restaurada correctamente',
+                })
+              } catch (error) {
+                toast({
+                  title: 'Error',
+                  description: 'No se pudo restaurar la prenda',
+                  variant: 'destructive',
+                })
+              }
+            }}
+          >
+            Deshacer
+          </Button>
+        ),
+      })
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'No se pudo eliminar la prenda',
+        variant: 'destructive',
+      })
+    } finally {
+      setRemovingId(null)
+    }
   }
 
   if (garments.length === 0) {
@@ -110,21 +159,22 @@ export function WardrobeGallery({ onAddClick }: WardrobeGalleryProps) {
               {garments.map((garment, index) => {
                 const categoryData = garment.category ? categoryInfo[garment.category] : null
                 return (
-                  <div 
-                    key={garment.url} 
+                  <div
+                    key={garment.id || garment.url}
                     className="group relative aspect-square rounded-lg overflow-hidden bg-muted hover:scale-[1.02] transition-transform duration-200"
                   >
-                    <img 
-                      src={garment.url} 
+                    <img
+                      src={garment.url}
                       alt={`Prenda ${index + 1}`}
-                      className="w-full h-full object-cover" 
+                      className="w-full h-full object-cover"
                     />
                     <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-200" />
                     <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                       <Button
                         size="sm"
                         variant="destructive"
-                        onClick={() => removeImage(index)}
+                        onClick={() => removeImage(garment.id, index)}
+                        disabled={removingId === garment.id}
                         className="h-8 w-8 p-0"
                         title="Eliminar prenda"
                       >
@@ -154,24 +204,22 @@ export function WardrobeGallery({ onAddClick }: WardrobeGalleryProps) {
               {garmentsByCategory[category.key]?.length > 0 ? (
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4">
                   {garmentsByCategory[category.key].map((garment, index) => (
-                    <div 
-                      key={garment.url} 
+                    <div
+                      key={garment.id || garment.url}
                       className="group relative aspect-square rounded-lg overflow-hidden bg-muted hover:scale-[1.02] transition-transform duration-200"
                     >
-                      <img 
-                        src={garment.url} 
+                      <img
+                        src={garment.url}
                         alt={`${category.name} ${index + 1}`}
-                        className="w-full h-full object-cover" 
+                        className="w-full h-full object-cover"
                       />
                       <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-200" />
                       <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                         <Button
                           size="sm"
                           variant="destructive"
-                          onClick={() => {
-                            const globalIndex = garments.findIndex(g => g.url === garment.url)
-                            if (globalIndex !== -1) removeImage(globalIndex)
-                          }}
+                          onClick={() => removeImage(garment.id, index)}
+                          disabled={removingId === garment.id}
                           className="h-8 w-8 p-0"
                           title="Eliminar prenda"
                         >

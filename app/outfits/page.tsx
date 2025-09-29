@@ -14,6 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Progress } from '@/components/ui/progress'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Card, CardContent } from '@/components/ui/card'
+import { LoadingAnimation } from '@/components/ui/loading-animation'
 import { Palette, Wand2, AlertTriangle, Star, Upload, Shirt } from 'lucide-react'
 
 const STEPS = ['Seleccionar Modelo','Elegir Prendas','Configurar Estilo','Generar Outfit','Ver Resultados']
@@ -43,9 +44,9 @@ export default function CrearOutfitPage() {
     showShoes: true,
     hideHatsAndCaps: true,
     adaptShoesToLook: true,
-    removeSunglasses: false,
-    onlySelectedGarments: false,
-    photoStyle: 'original' as 'original' | 'studio' | 'outdoor' | 'casual' | 'professional'
+    removeSunglasses: true,
+    onlySelectedGarments: true,
+    photoStyle: 'studio' as 'original' | 'studio' | 'outdoor' | 'casual' | 'professional'
   })
   
   // Generation states
@@ -394,11 +395,11 @@ export default function CrearOutfitPage() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent className="rounded-xl border border-border bg-white shadow-lg">
-                      <SelectItem value="original">Original (mantener fondo)</SelectItem>
                       <SelectItem value="studio">Estudio profesional</SelectItem>
                       <SelectItem value="outdoor">Exterior/aire libre</SelectItem>
                       <SelectItem value="casual">Ambiente casual/interior</SelectItem>
                       <SelectItem value="professional">Entorno profesional</SelectItem>
+                      <SelectItem value="original">Original (mantener fondo)</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -433,29 +434,24 @@ export default function CrearOutfitPage() {
       {step === 3 && (
         <section className="space-y-8">
           <h2 className="text-lg font-semibold text-ink-500">Generar Outfit</h2>
-          
-          <div className="rounded-2xl border border-border bg-white p-10 text-center shadow-card">
-            <div className="mx-auto flex h-24 w-24 items-center justify-center rounded-3xl bg-surface">
-              <Wand2 className={`h-12 w-12 text-ink-500 ${loading ? 'animate-pulse' : ''}`} />
-            </div>
-            <div className="mt-8 space-y-2">
-              <h3 className="text-2xl font-semibold text-ink-500">
-                {loading ? 'Generando tu outfit...' : 'Todo listo para generar'}
-              </h3>
-              <p className="mx-auto max-w-md text-sm text-text-secondary">
-                {loading
-                  ? 'La inteligencia artificial está creando combinaciones para tu outfit.'
-                  : 'Haz clic en generar para obtener un conjunto personalizado.'}
-              </p>
-            </div>
 
-            {loading && (
-              <div className="mx-auto mt-6 flex max-w-md flex-col gap-2">
-                <Progress value={generationProgress} className="h-2 rounded-full bg-surface" />
-                <p className="text-xs font-medium text-text-secondary">
-                  {Math.round(generationProgress)}% completado
-                </p>
-              </div>
+          <div className="rounded-2xl border border-border bg-gradient-to-br from-white via-pink-50/30 to-rose-50/30 p-10 text-center shadow-card">
+            {loading ? (
+              <LoadingAnimation />
+            ) : (
+              <>
+                <div className="mx-auto flex h-24 w-24 items-center justify-center rounded-3xl bg-surface">
+                  <Wand2 className="h-12 w-12 text-ink-500" />
+                </div>
+                <div className="mt-8 space-y-2">
+                  <h3 className="text-2xl font-semibold text-ink-500">
+                    Todo listo para generar
+                  </h3>
+                  <p className="mx-auto max-w-md text-sm text-text-secondary">
+                    Haz clic en generar para obtener un conjunto personalizado.
+                  </p>
+                </div>
+              </>
             )}
 
             {error && (

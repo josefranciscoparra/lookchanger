@@ -49,13 +49,15 @@ interface AppState {
   // Acciones para modelos
   setModels: (models: Model[]) => void
   addModels: (models: Model[]) => void
-  removeModel: (index: number) => void
+  removeModel: (id: string) => Promise<void>
+  undoRemoveModel: (id: string) => Promise<void>
   loadModelsFromApi: () => Promise<void>
   
   // Acciones para prendas
   setGarments: (garments: Garment[]) => void
   addGarments: (garments: Garment[]) => void
-  removeGarment: (index: number) => void
+  removeGarment: (id: string) => Promise<void>
+  undoRemoveGarment: (id: string) => Promise<void>
   updateGarmentCategory: (index: number, category: GarmentCategory) => void
   getGarmentsByCategory: () => Record<GarmentCategory, Garment[]>
   loadGarmentsFromApi: () => Promise<void>
@@ -86,9 +88,49 @@ export const useAppStore = create<AppState>()((set, get) => ({
     models: [...state.models, ...newModels]
   })),
 
-  removeModel: (index) => set((state) => ({
-    models: state.models.filter((_, i) => i !== index)
-  })),
+  removeModel: async (id: string) => {
+    try {
+      // Soft delete en la base de datos
+      const response = await fetch(`/api/models/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ active: false })
+      })
+
+      if (!response.ok) {
+        throw new Error('Error al eliminar modelo')
+      }
+
+      // Eliminar del estado local
+      set((state) => ({
+        models: state.models.filter((model) => model.id !== id)
+      }))
+    } catch (error) {
+      console.error('Error removing model:', error)
+      throw error
+    }
+  },
+
+  undoRemoveModel: async (id: string) => {
+    try {
+      // Restaurar en la base de datos
+      const response = await fetch(`/api/models/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ active: true })
+      })
+
+      if (!response.ok) {
+        throw new Error('Error al restaurar modelo')
+      }
+
+      // Recargar modelos desde la API
+      await get().loadModelsFromApi()
+    } catch (error) {
+      console.error('Error undoing model removal:', error)
+      throw error
+    }
+  },
 
   loadModelsFromApi: async () => {
     try {
@@ -118,9 +160,49 @@ export const useAppStore = create<AppState>()((set, get) => ({
     garments: [...state.garments, ...newGarments]
   })),
 
-  removeGarment: (index) => set((state) => ({
-    garments: state.garments.filter((_, i) => i !== index)
-  })),
+  removeGarment: async (id: string) => {
+    try {
+      // Soft delete en la base de datos
+      const response = await fetch(`/api/garments/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ active: false })
+      })
+
+      if (!response.ok) {
+        throw new Error('Error al eliminar prenda')
+      }
+
+      // Eliminar del estado local
+      set((state) => ({
+        garments: state.garments.filter((garment) => garment.id !== id)
+      }))
+    } catch (error) {
+      console.error('Error removing garment:', error)
+      throw error
+    }
+  },
+
+  undoRemoveGarment: async (id: string) => {
+    try {
+      // Restaurar en la base de datos
+      const response = await fetch(`/api/garments/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ active: true })
+      })
+
+      if (!response.ok) {
+        throw new Error('Error al restaurar prenda')
+      }
+
+      // Recargar prendas desde la API
+      await get().loadGarmentsFromApi()
+    } catch (error) {
+      console.error('Error undoing garment removal:', error)
+      throw error
+    }
+  },
 
   updateGarmentCategory: (index, category) => set((state) => ({
     garments: state.garments.map((garment, i) =>
