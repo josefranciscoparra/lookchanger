@@ -75,11 +75,17 @@ export async function generateLook({
   // Crear el prompt base con configuraciones específicas de variantes
   let promptText = `Create ${variants} photorealistic virtual try-on images using EXACTLY the same garments in all variants.
 
+CRITICAL IDENTITY PRESERVATION:
+- The MODEL PERSON image below shows the person whose EXACT face, hair, and body you MUST use
+- This person's facial features, hair color, hair style, skin tone, and body proportions MUST remain IDENTICAL in all generated images
+- You are ONLY changing their clothing - NEVER change their face or physical appearance
+- The MODEL PERSON is clearly labeled below - use ONLY that person's identity
+
 CORE REQUIREMENTS (apply to ALL variants):
-- Take the person from the first image
-- REPLACE their existing clothing with the garments shown below
-- The person should ONLY wear the new garments (remove original clothes)  
-- Keep the person's face, hair, and body shape exactly the same
+- Take the EXACT person (face, hair, body) from the MODEL PERSON image labeled below
+- REPLACE their existing clothing with the GARMENTS shown below
+- The person should ONLY wear the new garments (remove original clothes)
+- Keep the person's face, hair, and body shape EXACTLY the same as the MODEL PERSON
 - Fit the garments naturally on the person's body
 - ${outfitOptions.onlySelectedGarments ? 'CRITICAL: Remove ALL original clothing. The person must wear ONLY the garments provided below. Do not keep any pants, shirts, dresses, or any clothing from the original image' : 'For dresses: remove any pants, shirts or conflicting items. For tops: keep bottom clothing if no bottom garment provided'}
 - IMPORTANT: Always include appropriate footwear unless specifically instructed otherwise
@@ -133,7 +139,9 @@ ADDITIONAL OUTFIT OPTIONS:
     promptText += `\n\n- Generate standard frontal pose with neutral lighting`
   }
 
-  promptText += `\n\nCRITICAL: All variants must use the EXACT same garments. Only vary the specified elements above.`
+  promptText += `\n\nCRITICAL REMINDERS:
+- All variants must use the EXACT same garments. Only vary the specified elements above.
+- Keep the EXACT same face, hair, and physical appearance from the MODEL PERSON image in ALL generated images.`
 
   // Añadir información de estilo si está activada
   if (style && style.style && style.season) {
@@ -152,7 +160,12 @@ Style Preferences:
     }
   ]
 
-  // Agregar imágenes del modelo
+  // Agregar sección de modelo con etiqueta clara
+  content.push({
+    type: "text",
+    text: "\n========================================\nMODEL PERSON (use this EXACT face, hair, and body):\n========================================"
+  })
+
   for (const modelUrl of modelUrls) {
     content.push({
       type: "image_url",
@@ -162,16 +175,21 @@ Style Preferences:
     })
   }
 
-  // Agregar prendas
-  for (const garmentUrl of garmentUrls) {
+  // Agregar sección de prendas con etiqueta clara
+  content.push({
+    type: "text",
+    text: "\n========================================\nGARMENTS TO WEAR (dress the MODEL PERSON in these):\n========================================"
+  })
+
+  for (let i = 0; i < garmentUrls.length; i++) {
     content.push({
-      type: "text", 
-      text: "GARMENT:"
+      type: "text",
+      text: `\nGARMENT ${i + 1} of ${garmentUrls.length}:`
     })
     content.push({
       type: "image_url",
       image_url: {
-        url: garmentUrl
+        url: garmentUrls[i]
       }
     })
   }
