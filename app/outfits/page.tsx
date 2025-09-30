@@ -452,69 +452,22 @@ export default function CrearOutfitPage() {
 
       {/* Paso 4: Ver Resultados */}
       {step === 4 && (
-        <section className="space-y-6">
-          <h2 className="text-lg font-semibold text-ink-500">Ver Resultados</h2>
-          
+        <section className="space-y-6 pt-8 pb-20">
           {outputs.length > 0 ? (
-            <>
-              <div className="space-y-2 text-center">
-                <h3 className="text-2xl font-semibold text-ink-500">¡Outfits generados con éxito!</h3>
-                <p className="text-sm text-text-secondary">
-                  Aquí tienes {outputs.length} variante{outputs.length !== 1 ? 's' : ''} para tu look.
-                </p>
+            <div className="flex justify-center">
+              <div
+                onClick={() => openPreview(outputs[0], 'Tu Outfit', `Estilo ${stylePreferences.style}`, true)}
+                className="group overflow-hidden rounded-2xl border border-border bg-white shadow-card transition-all duration-300 hover:-translate-y-1 hover:shadow-lg cursor-pointer max-w-md w-full"
+              >
+                <div className="relative aspect-[3/4] overflow-hidden">
+                  <img
+                    src={outputs[0]}
+                    alt="Outfit generado"
+                    className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+                  />
+                </div>
               </div>
-              
-              <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-                {outputs.map((url, index) => (
-                  <div
-                    key={url}
-                    onClick={() => openPreview(url, `Variante ${index + 1}`, `Estilo ${stylePreferences.style}`, true)}
-                    className="group overflow-hidden rounded-2xl border border-border bg-white shadow-card transition-all duration-300 hover:-translate-y-1 hover:shadow-lg cursor-pointer"
-                  >
-                    <div className="relative aspect-[3/4] overflow-hidden">
-                      <img 
-                        src={url} 
-                        alt={`Outfit ${index + 1}`}
-                        className="h-full w-full object-cover transition duration-500 group-hover:scale-105" 
-                      />
-                      <div className="absolute right-3 top-3">
-                        <div className="rounded-full bg-ink-500 px-3 py-1 text-xs font-medium text-white">
-                          #{index + 1}
-                        </div>
-                      </div>
-                    </div>
-                    <div className="flex items-center justify-between gap-4 p-5">
-                      <div className="space-y-1">
-                        <h4 className="text-base font-medium text-ink-500">Variante {index + 1}</h4>
-                        <p className="text-xs uppercase tracking-wide text-text-secondary">
-                          Estilo {stylePreferences.style}
-                        </p>
-                      </div>
-                      <Button
-                        size="sm"
-                        variant="secondary"
-                        onClick={(event) => {
-                          event.stopPropagation()
-                        }}
-                        className="rounded-full border-border bg-white text-ink-500"
-                      >
-                        <Star className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-              
-              <div className="flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
-                <Button
-                  variant="secondary"
-                  onClick={() => { setStep(0); setSelectedModel(null); setSelectedGarments([]); }}
-                  className="rounded-full border-border bg-white text-ink-500"
-                >
-                  Crear Nuevo Outfit
-                </Button>
-              </div>
-            </>
+            </div>
           ) : (
             <div className="rounded-2xl border border-dashed border-border bg-white p-12 text-center shadow-card">
               <AlertTriangle className="mb-4 h-12 w-12 mx-auto text-destructive" />
