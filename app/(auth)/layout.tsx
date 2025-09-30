@@ -1,6 +1,6 @@
-export const metadata = { 
-  title: 'LookChanger - Autenticación', 
-  description: 'Accede a tu cuenta de LookChanger' 
+export const metadata = {
+  title: 'Lookah - Autenticación',
+  description: 'Accede a tu cuenta de Lookah'
 }
 
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
