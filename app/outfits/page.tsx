@@ -60,6 +60,14 @@ export default function CrearOutfitPage() {
     initialize()
   }, [initialize])
 
+  // Detectar cambios en el step para debugging
+  useEffect(() => {
+    console.log(`📍 Step cambió a: ${step} (${STEPS[step]})`)
+    if (step === 0) {
+      console.log('⚠️  ¡ATENCIÓN! Volvió a step 0 (Seleccionar Modelo)', new Error().stack)
+    }
+  }, [step])
+
   // Mostrar spinner mientras carga por primera vez
   if (!isInitialized && isLoading) {
     return (
@@ -93,12 +101,31 @@ export default function CrearOutfitPage() {
   }
   
   const generateOutfit = async () => {
+    console.log('🎬 generateOutfit llamado - Estado actual:', {
+      step,
+      selectedModel,
+      selectedGarmentsCount: selectedGarments.length,
+      modelsAvailable: models.length,
+      garmentsAvailable: garments.length
+    })
+
+    // Verificar que tenemos modelo y prendas
+    if (!selectedModel || selectedGarments.length === 0) {
+      console.error('❌ Validación fallida en generateOutfit:', {
+        hasModel: !!selectedModel,
+        garmentsCount: selectedGarments.length
+      })
+      setError('Debes seleccionar un modelo y al menos una prenda')
+      return
+    }
+
+    console.log('✅ Validación exitosa, iniciando generación')
     setLoading(true)
     setError('')
     setOutputs([])
     setGenerationProgress(0)
     setStep(3) // Go to generate step
-    
+
     try {
       // Simular progreso de generación
       const progressInterval = setInterval(() => {
@@ -107,7 +134,19 @@ export default function CrearOutfitPage() {
           return prev + Math.random() * 15
         })
       }, 500)
-      
+
+      // Encontrar el modelo seleccionado para obtener su ID
+      const selectedModelObj = models.find(m => m.url === selectedModel)
+
+      console.log('Generando outfit con modelo:', {
+        modelUrl: selectedModel,
+        modelId: selectedModelObj?.id,
+        hasPhysicalInfo: selectedModelObj?.use_physical_info,
+        weight: selectedModelObj?.weight,
+        height: selectedModelObj?.height,
+        bodyType: selectedModelObj?.body_type
+      })
+
       const res = await fetch('/api/outfits/run', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -116,7 +155,8 @@ export default function CrearOutfitPage() {
           garmentUrls: selectedGarments,
           style: useAdvancedStyle ? stylePreferences : undefined,
           useAdvancedStyle,
-          outfitOptions
+          outfitOptions,
+          modelId: selectedModelObj?.id || null
         })
       })
       const json = await res.json()
@@ -149,7 +189,11 @@ export default function CrearOutfitPage() {
           <h1 className="text-3xl font-bold text-ink-500">Crear Outfit</h1>
           <p className="mt-1 text-text-secondary">Asistente guiado con IA para construir looks modernos y minimalistas.</p>
         </div>
-        <Button variant="secondary" onClick={()=>{ setStep(0); setSelectedModel(null); }}>Reiniciar</Button>
+        <Button variant="secondary" onClick={()=>{
+          console.log('🔄 Botón REINICIAR clickeado explícitamente')
+          setStep(0);
+          setSelectedModel(null);
+        }}>Reiniciar</Button>
       </div>
 
       {/* Stepper */}
@@ -509,17 +553,34 @@ export default function CrearOutfitPage() {
           <Button
             variant="accent"
             onClick={()=>{
-              if (step===0 && !selectedModel && mode==='existente') return;
-              if (step===1 && selectedGarments.length === 0) return;
+              console.log('🔘 Botón principal clickeado - Estado:', {
+                step,
+                stepName: STEPS[step],
+                selectedModel,
+                selectedGarmentsCount: selectedGarments.length,
+                mode
+              })
+
+              if (step===0 && !selectedModel && mode==='existente') {
+                console.warn('⚠️  Bloqueado en step 0: sin modelo')
+                return;
+              }
+              if (step===1 && selectedGarments.length === 0) {
+                console.warn('⚠️  Bloqueado en step 1: sin prendas')
+                return;
+              }
               if (step===2) {
+                console.log('▶️  Ejecutando generateOutfit desde step 2')
                 generateOutfit();
                 return;
               }
               if (step===4) {
+                console.log('🏁 Finalizando - redirigiendo a galería')
                 // Ir a la galería de imágenes
                 window.location.assign('/gallery');
                 return;
               }
+              console.log('⏭️  Avanzando al siguiente paso')
               next();
             }}
             disabled={

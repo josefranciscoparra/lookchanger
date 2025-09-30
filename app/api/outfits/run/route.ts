@@ -25,10 +25,10 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const { 
-      modelUrls = [], 
-      garmentUrls = [], 
-      variants = 1, 
+    const {
+      modelUrls = [],
+      garmentUrls = [],
+      variants = 1,
       variantConfigs = [],
       style = { style: 'casual', season: 'any' },
       useAdvancedStyle = false,
@@ -41,13 +41,40 @@ export async function POST(req: NextRequest) {
         removeSunglasses: false,
         onlySelectedGarments: false,
         photoStyle: 'original'
-      }
+      },
+      modelId = null
     } = await req.json()
-    
+
     if (!modelUrls.length || !garmentUrls.length) {
-      return NextResponse.json({ 
-        error: 'Se requieren URLs de modelo y prendas para generar el look' 
+      return NextResponse.json({
+        error: 'Se requieren URLs de modelo y prendas para generar el look'
       }, { status: 400 })
+    }
+
+    // Obtener información física del modelo si hay modelId
+    let physicalInfo = null
+    if (modelId) {
+      const { data: modelData } = await supabase
+        .from('models')
+        .select('weight, height, body_type, use_physical_info')
+        .eq('id', modelId)
+        .eq('user_id', user.id)
+        .single()
+
+      console.log('📊 Datos físicos del modelo desde BD:', modelData)
+
+      if (modelData && modelData.use_physical_info) {
+        physicalInfo = {
+          weight: modelData.weight,
+          height: modelData.height,
+          bodyType: modelData.body_type
+        }
+        console.log('✅ Información física activada para el prompt:', physicalInfo)
+      } else {
+        console.log('❌ Información física NO activada o no disponible')
+      }
+    } else {
+      console.log('⚠️  No se proporcionó modelId')
     }
 
     if (variants < 1 || variants > 4) {
@@ -67,14 +94,15 @@ export async function POST(req: NextRequest) {
       user.id
     )
     
-    const outputs = await generateLook({ 
-      modelUrls, 
-      garmentUrls, 
+    const outputs = await generateLook({
+      modelUrls,
+      garmentUrls,
       variants,
-      variantConfigs, 
-      style: useAdvancedStyle ? style : undefined, 
+      variantConfigs,
+      style: useAdvancedStyle ? style : undefined,
       modelCharacteristics,
-      outfitOptions
+      outfitOptions,
+      physicalInfo
     })
     
     if (!outputs.length) {

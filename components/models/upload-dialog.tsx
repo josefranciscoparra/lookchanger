@@ -1,12 +1,15 @@
 'use client'
 import { useState, useCallback } from 'react'
-import { Upload, X, Camera, Info, Sparkles } from 'lucide-react'
+import { Upload, X, Camera, Info, Sparkles, ChevronDown, ChevronUp } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Progress } from '@/components/ui/progress'
 import { Badge } from '@/components/ui/badge'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { TooltipProvider } from '@/components/ui/tooltip'
+import { Switch } from '@/components/ui/switch'
+import { Input } from '@/components/ui/input'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 
 interface UploadDialogProps {
   open: boolean
@@ -22,6 +25,13 @@ export function UploadDialog({ open, onOpenChange, onUploadComplete }: UploadDia
   const [uploadProgress, setUploadProgress] = useState(0)
   const [dragActive, setDragActive] = useState(false)
 
+  // Physical measurements state
+  const [showPhysicalInfo, setShowPhysicalInfo] = useState(false)
+  const [usePhysicalInfo, setUsePhysicalInfo] = useState(false)
+  const [weight, setWeight] = useState<string>('')
+  const [height, setHeight] = useState<string>('')
+  const [bodyType, setBodyType] = useState<string>('')
+
   const onUpload = useCallback(async () => {
     if (!files.length) {
       setError('Selecciona al menos un archivo')
@@ -32,45 +42,58 @@ export function UploadDialog({ open, onOpenChange, onUploadComplete }: UploadDia
     setError('')
     setSuccess('')
     setUploadProgress(0)
-    
+
     try {
       const body = new FormData()
       files.forEach(f => body.append('files', f))
-      
+
+      // Añadir información física si está activada
+      if (usePhysicalInfo) {
+        if (weight) body.append('weight', weight)
+        if (height) body.append('height', height)
+        if (bodyType) body.append('body_type', bodyType)
+        body.append('use_physical_info', 'true')
+      }
+
       const progressInterval = setInterval(() => {
         setUploadProgress(prev => prev < 90 ? prev + 10 : prev)
       }, 200)
-      
+
       const res = await fetch('/api/upload?type=model', { method: 'POST', body })
       const json = await res.json()
-      
+
       clearInterval(progressInterval)
       setUploadProgress(100)
-      
+
       if (!res.ok) {
         throw new Error(json.error || 'Error al subir archivos')
       }
-      
+
       if (json.urls && json.urls.length > 0) {
         onUploadComplete(json.urls)
       }
-      
+
       setFiles([])
+      setWeight('')
+      setHeight('')
+      setBodyType('')
+      setUsePhysicalInfo(false)
+      setShowPhysicalInfo(false)
       setSuccess(`${json.urls?.length || 0} modelo(s) subido(s) correctamente`)
-      
+
       setTimeout(() => {
         setUploadProgress(0)
         setSuccess('')
         onOpenChange(false)
       }, 2000)
-      
+
     } catch (err) {
       setUploadProgress(0)
       setError(err instanceof Error ? err.message : 'Error desconocido')
     } finally {
       setUploadLoading(false)
     }
-  }, [files, onUploadComplete, onOpenChange])
+  }, [files, usePhysicalInfo, weight, height, bodyType, onUploadComplete, onOpenChange])
 
   const clearMessages = useCallback(() => {
     setError('')
@@ -271,7 +294,88 @@ export function UploadDialog({ open, onOpenChange, onUploadComplete }: UploadDia
                     <Progress value={uploadProgress} className="h-2" />
                   </div>
                 )}
-                
+
+                {/* Physical Information Section */}
+                <div className="rounded-lg border bg-muted/30 p-4 space-y-4">
+                  <button
+                    type="button"
+                    onClick={() => setShowPhysicalInfo(!showPhysicalInfo)}
+                    className="w-full flex items-center justify-between text-sm font-medium text-ink-500 hover:text-ink-600 transition-colors"
+                  >
+                    <span className="flex items-center gap-2">
+                      <Info className="h-4 w-4" />
+                      Información física del modelo (opcional)
+                    </span>
+                    {showPhysicalInfo ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                  </button>
+
+                  {showPhysicalInfo && (
+                    <div className="space-y-4 pt-2">
+                      <div className="flex items-center justify-between rounded-lg border bg-white p-3">
+                        <div className="space-y-0.5">
+                          <label className="text-sm font-medium text-ink-500">
+                            Usar medidas en generación de outfits
+                          </label>
+                          <p className="text-xs text-muted-foreground">
+                            Las medidas se incluirán en el prompt de IA para mejor ajuste
+                          </p>
+                        </div>
+                        <Switch
+                          checked={usePhysicalInfo}
+                          onCheckedChange={setUsePhysicalInfo}
+                        />
+                      </div>
+
+                      {usePhysicalInfo && (
+                        <div className="grid grid-cols-2 gap-3">
+                          <div className="space-y-2">
+                            <label className="text-xs font-medium text-muted-foreground">
+                              Peso (kg)
+                            </label>
+                            <Input
+                              type="number"
+                              placeholder="70"
+                              value={weight}
+                              onChange={(e) => setWeight(e.target.value)}
+                              className="h-9"
+                            />
+                          </div>
+
+                          <div className="space-y-2">
+                            <label className="text-xs font-medium text-muted-foreground">
+                              Altura (cm)
+                            </label>
+                            <Input
+                              type="number"
+                              placeholder="175"
+                              value={height}
+                              onChange={(e) => setHeight(e.target.value)}
+                              className="h-9"
+                            />
+                          </div>
+
+                          <div className="col-span-2 space-y-2">
+                            <label className="text-xs font-medium text-muted-foreground">
+                              Complexión
+                            </label>
+                            <Select value={bodyType} onValueChange={setBodyType}>
+                              <SelectTrigger className="h-9">
+                                <SelectValue placeholder="Selecciona complexión" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="slim">Delgado</SelectItem>
+                                <SelectItem value="athletic">Atlético</SelectItem>
+                                <SelectItem value="medium">Medio</SelectItem>
+                                <SelectItem value="robust">Robusto</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+
                 <div className="flex gap-2">
                   <Button 
                     onClick={onUpload}

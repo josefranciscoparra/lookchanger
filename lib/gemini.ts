@@ -49,10 +49,11 @@ export async function generateLook({
     removeSunglasses: false,
     onlySelectedGarments: false,
     photoStyle: 'original'
-  }
-}: { 
-  modelUrls: string[], 
-  garmentUrls: string[], 
+  },
+  physicalInfo
+}: {
+  modelUrls: string[],
+  garmentUrls: string[],
   variants?: number,
   variantConfigs?: VariantConfig[],
   style?: { style: string, season: string },
@@ -65,7 +66,12 @@ export async function generateLook({
     removeSunglasses: boolean,
     onlySelectedGarments: boolean,
     photoStyle: 'original' | 'studio' | 'outdoor' | 'casual' | 'professional'
-  }
+  },
+  physicalInfo?: {
+    weight?: number | null,
+    height?: number | null,
+    bodyType?: string | null
+  } | null
 }): Promise<string[]> {
   // Si no hay API_KEY, devolvemos imágenes "eco" (echo) para demo
   if (!OPENROUTER_API_KEY) {
@@ -73,31 +79,56 @@ export async function generateLook({
   }
 
   // Crear el prompt base con configuraciones específicas de variantes
-  let promptText = `Create ${variants} photorealistic virtual try-on images using EXACTLY the same garments in all variants.
+  let promptText = `⚠️ CRITICAL: VIRTUAL TRY-ON TASK - IDENTITY PRESERVATION IS MANDATORY ⚠️
 
-CRITICAL IDENTITY PRESERVATION:
-- The MODEL PERSON image below shows the person whose EXACT face, hair, and body you MUST use
-- This person's facial features, hair color, hair style, skin tone, and body proportions MUST remain IDENTICAL in all generated images
-- You are ONLY changing their clothing - NEVER change their face or physical appearance
-- The MODEL PERSON is clearly labeled below - use ONLY that person's identity
+This is a VIRTUAL TRY-ON task, NOT a person generation task.
+You MUST preserve the EXACT identity of the person shown in the MODEL PERSON image.
 
-CORE REQUIREMENTS (apply to ALL variants):
-- Take the EXACT person (face, hair, body) from the MODEL PERSON image labeled below
-- REPLACE their existing clothing with the GARMENTS shown below
-- The person should ONLY wear the new garments (remove original clothes)
-- Keep the person's face, hair, and body shape EXACTLY the same as the MODEL PERSON
-- Fit the garments naturally on the person's body
-- ${outfitOptions.onlySelectedGarments ? 'CRITICAL: Remove ALL original clothing. The person must wear ONLY the garments provided below. Do not keep any pants, shirts, dresses, or any clothing from the original image' : 'For dresses: remove any pants, shirts or conflicting items. For tops: keep bottom clothing if no bottom garment provided'}
-- IMPORTANT: Always include appropriate footwear unless specifically instructed otherwise
+🔴 ABSOLUTE REQUIREMENTS - FACIAL IDENTITY PRESERVATION:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• USE FACE SWAP / IDENTITY TRANSFER technique
+• The MODEL PERSON image shows the EXACT face you MUST preserve
+• Keep 100% IDENTICAL: eyes, nose, mouth, jawline, cheekbones, forehead, chin
+• Keep 100% IDENTICAL: facial structure, face shape, skin tone, skin texture
+• Keep 100% IDENTICAL: hair (color, style, texture, length)
+• Keep 100% IDENTICAL: facial expressions and features
+• This person's identity MUST be PERFECTLY recognizable in all outputs
 
-ADDITIONAL OUTFIT OPTIONS:
-- Body framing: ${outfitOptions.fullBodyVisible ? 'Show the complete figure from head to toe in full body view' : 'Focus on upper body/torso area'}
-- Footwear requirement: ${outfitOptions.showShoes ? 'MUST include appropriate shoes/footwear in the image. The person should NOT be barefoot' : 'Crop image to exclude feet/shoes'}
-- Head accessories: ${outfitOptions.hideHatsAndCaps ? 'Do NOT add hats, caps, beanies or any head coverings' : 'Head accessories are allowed if they complement the outfit'}
-- Shoe styling: ${outfitOptions.adaptShoesToLook ? 'Choose stylish footwear that perfectly matches and complements the outfit colors, style and occasion. Ensure shoes are clearly visible and well-coordinated' : 'Use simple, neutral footwear (sneakers, basic flats, or similar)'}
-- Sunglasses policy: ${outfitOptions.removeSunglasses ? 'Remove any sunglasses from the person - the eyes should be visible and clear' : 'Keep sunglasses only if the original model is wearing them, otherwise do NOT add sunglasses'}
-- Clothing replacement: ${outfitOptions.onlySelectedGarments ? 'STRICT MODE: Remove every piece of clothing from the original image and dress the person exclusively with the provided garments' : 'Standard replacement with smart clothing coordination'}
-- Photography style: ${getPhotoStylePrompt(outfitOptions.photoStyle)}`
+🚫 FORBIDDEN - DO NOT:
+• Generate a different person's face
+• Modify ANY facial features (eyes, nose, mouth, face shape)
+• Change eye color, skin tone, or facial structure
+• Create a generic model - use THIS SPECIFIC PERSON
+• Alter hair color or hairstyle from the original
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+YOUR ONLY JOB: Transfer this person's clothing to the new garments shown below.
+Generate ${variants} photorealistic virtual try-on images using EXACTLY the same garments in all variants
+${physicalInfo && (physicalInfo.weight || physicalInfo.height || physicalInfo.bodyType) ? `
+
+📏 BODY PROPORTIONS (applies to BODY ONLY - NEVER change the FACE):
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+${physicalInfo.height ? `• Height: ${physicalInfo.height} cm` : ''}
+${physicalInfo.weight ? `• Weight: ${physicalInfo.weight} kg` : ''}
+${physicalInfo.bodyType ? `• Body type: ${physicalInfo.bodyType}` : ''}
+
+⚠️ IMPORTANT: These measurements affect ONLY the body proportions and clothing fit.
+The FACE must remain 100% identical to the MODEL PERSON regardless of weight/height.
+${physicalInfo.weight && physicalInfo.weight > 90 ? '• Show realistic larger body frame and torso for this weight\n• Clothing should fit a heavier body build naturally\n• Body proportions reflect this weight (NOT the face)' : ''}
+${physicalInfo.weight && physicalInfo.weight < 60 ? '• Show realistic slimmer body frame and torso for this weight\n• Clothing should fit a lighter body build naturally\n• Body proportions reflect this weight (NOT the face)' : ''}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━` : ''}
+
+✅ CORE TASK:
+1. Take the MODEL PERSON from the image below (keep their EXACT face)
+2. Dress them in the GARMENTS shown below
+3. ${outfitOptions.onlySelectedGarments ? 'Remove ALL original clothing - use ONLY the provided garments' : 'Smart clothing replacement'}
+
+Additional options:
+• Framing: ${outfitOptions.fullBodyVisible ? 'Full body view' : 'Upper body focus'}
+• Footwear: ${outfitOptions.showShoes ? 'Include appropriate shoes' : 'Exclude feet'}${outfitOptions.adaptShoesToLook ? ' matching the outfit style' : ''}
+• ${outfitOptions.hideHatsAndCaps ? 'No head accessories' : 'Head accessories allowed'}
+• ${outfitOptions.removeSunglasses ? 'No sunglasses (show eyes)' : 'Keep original eyewear'}
+• Style: ${getPhotoStylePrompt(outfitOptions.photoStyle)}`
 
   // Generar instrucciones específicas para cada variante
   if (variants > 1 && variantConfigs.length > 0) {
@@ -139,9 +170,27 @@ ADDITIONAL OUTFIT OPTIONS:
     promptText += `\n\n- Generate standard frontal pose with neutral lighting`
   }
 
-  promptText += `\n\nCRITICAL REMINDERS:
-- All variants must use the EXACT same garments. Only vary the specified elements above.
-- Keep the EXACT same face, hair, and physical appearance from the MODEL PERSON image in ALL generated images.`
+  promptText += `
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🔴 FINAL CRITICAL REMINDERS:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. IDENTITY PRESERVATION IS MANDATORY
+   → The person in ALL outputs must be INSTANTLY recognizable as the MODEL PERSON
+   → Face, eyes, nose, mouth, hair MUST be 100% identical
+   → This is a virtual try-on, NOT generating a new person
+
+2. All variants use EXACTLY the same garments
+   → Only vary pose/lighting/angle as specified above
+
+3. VERIFY before generating:
+   ✓ Am I using the EXACT face from MODEL PERSON image?
+   ✓ Are the facial features 100% identical?
+   ✓ Would someone recognize this person immediately?
+
+If you cannot preserve the exact identity, DO NOT generate the image.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`
 
   // Añadir información de estilo si está activada
   if (style && style.style && style.season) {
@@ -163,7 +212,7 @@ Style Preferences:
   // Agregar sección de modelo con etiqueta clara
   content.push({
     type: "text",
-    text: "\n========================================\nMODEL PERSON (use this EXACT face, hair, and body):\n========================================"
+    text: "\n\n🔴 MODEL PERSON - PRESERVE THIS EXACT IDENTITY:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nThis is the person whose FACE, HAIR, and BODY you MUST use.\nTheir identity must be PERFECTLY preserved in all outputs.\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
   })
 
   for (const modelUrl of modelUrls) {
@@ -178,7 +227,7 @@ Style Preferences:
   // Agregar sección de prendas con etiqueta clara
   content.push({
     type: "text",
-    text: "\n========================================\nGARMENTS TO WEAR (dress the MODEL PERSON in these):\n========================================"
+    text: "\n\n👔 GARMENTS TO WEAR:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nDress the MODEL PERSON above in THESE garments.\nKeep their face identical.\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
   })
 
   for (let i = 0; i < garmentUrls.length; i++) {

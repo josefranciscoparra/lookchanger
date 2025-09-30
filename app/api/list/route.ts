@@ -50,7 +50,7 @@ export async function GET(req: Request) {
 
     const { data, error } = await supabase
       .from('models')
-      .select('id,image_url,created_at')
+      .select('id,image_url,created_at,weight,height,body_type,use_physical_info')
       .eq('user_id', user.id)
       .eq('active', true)
       .order('created_at', { ascending: false })
@@ -63,7 +63,11 @@ export async function GET(req: Request) {
     const items = data?.map(item => ({
       id: item.id,
       url: item.image_url,
-      created_at: item.created_at
+      created_at: item.created_at,
+      weight: item.weight,
+      height: item.height,
+      body_type: item.body_type,
+      use_physical_info: item.use_physical_info
     })) || []
 
     return Response.json({ items })

@@ -24,6 +24,10 @@ export interface Model {
   id?: string
   url: string
   created_at?: string
+  weight?: number
+  height?: number
+  body_type?: string
+  use_physical_info?: boolean
 }
 
 export type GarmentCategory = 'tops' | 'bottoms' | 'vestidos' | 'calzado' | 'abrigos' | 'accesorios'
@@ -142,7 +146,11 @@ export const useAppStore = create<AppState>()((set, get) => ({
         const models: Model[] = data.items.map((item: any) => ({
           id: item.id,
           url: item.url,
-          created_at: item.created_at
+          created_at: item.created_at,
+          weight: item.weight,
+          height: item.height,
+          body_type: item.body_type,
+          use_physical_info: item.use_physical_info
         }))
         set({ models })
       }

@@ -1,19 +1,22 @@
 'use client'
 import { useAppStore } from '@/lib/store'
-import { User, X, Plus } from 'lucide-react'
+import { User, X, Plus, Edit } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { useToast } from '@/hooks/use-toast'
 import { useState } from 'react'
+import { EditModelDialog } from '@/components/models/edit-model-dialog'
+import type { Model } from '@/lib/store'
 
 interface ModelsGalleryProps {
   onAddClick: () => void
 }
 
 export function ModelsGallery({ onAddClick }: ModelsGalleryProps) {
-  const { models, removeModel, undoRemoveModel } = useAppStore()
+  const { models, removeModel, undoRemoveModel, loadModelsFromApi } = useAppStore()
   const { toast } = useToast()
   const [removingId, setRemovingId] = useState<string | null>(null)
+  const [editingModel, setEditingModel] = useState<Model | null>(null)
 
   const removeImage = async (id: string | undefined, index: number) => {
     if (!id) {
@@ -119,7 +122,16 @@ export function ModelsGallery({ onAddClick }: ModelsGalleryProps) {
                 className="w-full h-full object-cover"
               />
               <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-200" />
-              <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+              <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex gap-1">
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  onClick={() => setEditingModel(model)}
+                  className="h-8 w-8 p-0 bg-white/90 hover:bg-white"
+                  title="Editar modelo"
+                >
+                  <Edit className="h-4 w-4 text-ink-500" />
+                </Button>
                 <Button
                   size="sm"
                   variant="destructive"
@@ -140,6 +152,16 @@ export function ModelsGallery({ onAddClick }: ModelsGalleryProps) {
           ))}
         </div>
       </CardContent>
+
+      {/* Edit Model Dialog */}
+      {editingModel && (
+        <EditModelDialog
+          open={!!editingModel}
+          onOpenChange={(open) => !open && setEditingModel(null)}
+          model={editingModel}
+          onSave={loadModelsFromApi}
+        />
+      )}
     </Card>
   )
 }
