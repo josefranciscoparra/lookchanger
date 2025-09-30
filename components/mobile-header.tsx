@@ -34,10 +34,8 @@ export function MobileHeader() {
           />
         </Link>
       </div>
-      
-      <div className="flex items-center">
-        <h1 className="text-lg font-semibold text-ink-500">{currentPageName}</h1>
-      </div>
+
+      <h1 className="text-lg font-semibold text-ink-500">{currentPageName}</h1>
     </header>
   )
 }

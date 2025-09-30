@@ -7,7 +7,9 @@ import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { ImagePreview } from '@/components/ui/ImagePreview'
-import { Image, Download, Calendar, Zap } from 'lucide-react'
+import { DisputeModal } from '@/components/DisputeModal'
+import { useAppStore } from '@/lib/store'
+import { Image, Download, Calendar, Zap, AlertCircle, CheckCircle, Clock } from 'lucide-react'
 // import { toast } from 'sonner' // Toast no disponible
 
 type Output = {
@@ -37,6 +39,7 @@ type GeneratedImageGroup = {
 export default function GalleryPage() {
   const [generatedImages, setGeneratedImages] = useState<GeneratedImageGroup[]>([])
   const [loading, setLoading] = useState(true)
+  const { refreshCredits } = useAppStore()
 
   // Preview states
   const [previewOpen, setPreviewOpen] = useState(false)
@@ -44,6 +47,10 @@ export default function GalleryPage() {
   const [previewTitle, setPreviewTitle] = useState('')
   const [previewSubtitle, setPreviewSubtitle] = useState('')
   const [previewShowDownload, setPreviewShowDownload] = useState(false)
+
+  // Dispute modal states
+  const [disputeModalOpen, setDisputeModalOpen] = useState(false)
+  const [selectedOutputId, setSelectedOutputId] = useState<string>('')
 
   useEffect(() => {
     loadGeneratedImages()
@@ -139,6 +146,38 @@ export default function GalleryPage() {
     setPreviewOpen(true)
   }
 
+  const openDisputeModal = (outputId: string) => {
+    setSelectedOutputId(outputId)
+    setDisputeModalOpen(true)
+  }
+
+  const handleDisputeSuccess = async () => {
+    // Recargar galería y refrescar créditos
+    await loadGeneratedImages()
+    await refreshCredits()
+  }
+
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'disputed':
+        return (
+          <Badge className="bg-yellow-100 text-yellow-800 border-yellow-200" variant="outline">
+            <Clock className="h-3 w-3 mr-1" />
+            En revisión
+          </Badge>
+        )
+      case 'refunded':
+        return (
+          <Badge className="bg-green-100 text-green-800 border-green-200" variant="outline">
+            <CheckCircle className="h-3 w-3 mr-1" />
+            Reembolsado
+          </Badge>
+        )
+      default:
+        return null
+    }
+  }
+
   if (loading) {
     return (
       <main className="mx-auto max-w-6xl px-6 pb-28 pt-6">
@@ -224,30 +263,59 @@ export default function GalleryPage() {
               {imageGroup.outputs.map((output, outputIndex) => (
                 <div
                   key={output.id}
-                  className="group relative aspect-square overflow-hidden rounded-2xl border border-border bg-white shadow-card transition-all duration-300 hover:-translate-y-1 hover:shadow-lg cursor-pointer"
-                  onClick={() => openPreview(
-                    output.image_url,
-                    'Outfit generado',
-                    formatDate(imageGroup.job.created_at),
-                    true
-                  )}
+                  className="group relative aspect-square overflow-hidden rounded-2xl border border-border bg-white shadow-card transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
                 >
-                  <img
-                    src={output.image_url}
-                    alt={`Outfit generado ${outputIndex + 1}`}
-                    className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-                    onError={(e) => {
-                      const img = e.target as HTMLImageElement
-                      img.src = 'data:image/svg+xml;base64,' + btoa(`
-                        <svg width="300" height="300" xmlns="http://www.w3.org/2000/svg">
-                          <rect width="100%" height="100%" fill="#f3f4f6"/>
-                          <text x="50%" y="50%" text-anchor="middle" dy=".3em" fill="#9ca3af">
-                            Error cargando imagen
-                          </text>
-                        </svg>
-                      `)
-                    }}
-                  />
+                  <div
+                    className="cursor-pointer h-full w-full"
+                    onClick={() => openPreview(
+                      output.image_url,
+                      'Outfit generado',
+                      formatDate(imageGroup.job.created_at),
+                      true
+                    )}
+                  >
+                    <img
+                      src={output.image_url}
+                      alt={`Outfit generado ${outputIndex + 1}`}
+                      className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                      onError={(e) => {
+                        const img = e.target as HTMLImageElement
+                        img.src = 'data:image/svg+xml;base64,' + btoa(`
+                          <svg width="300" height="300" xmlns="http://www.w3.org/2000/svg">
+                            <rect width="100%" height="100%" fill="#f3f4f6"/>
+                            <text x="50%" y="50%" text-anchor="middle" dy=".3em" fill="#9ca3af">
+                              Error cargando imagen
+                            </text>
+                          </svg>
+                        `)
+                      }}
+                    />
+                  </div>
+
+                  {/* Status badge si existe */}
+                  {output.status && output.status !== 'approved' && (
+                    <div className="absolute top-3 left-3">
+                      {getStatusBadge(output.status)}
+                    </div>
+                  )}
+
+                  {/* Botón de reportar problema */}
+                  {output.can_dispute && (
+                    <div className="absolute bottom-3 right-3">
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        className="opacity-0 group-hover:opacity-100 transition-opacity bg-white/90 hover:bg-white shadow-md"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          openDisputeModal(output.id)
+                        }}
+                      >
+                        <AlertCircle className="h-4 w-4 mr-1" />
+                        Reportar
+                      </Button>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
@@ -263,6 +331,14 @@ export default function GalleryPage() {
         title={previewTitle}
         subtitle={previewSubtitle}
         showDownload={previewShowDownload}
+      />
+
+      {/* Dispute Modal */}
+      <DisputeModal
+        isOpen={disputeModalOpen}
+        onClose={() => setDisputeModalOpen(false)}
+        outputId={selectedOutputId}
+        onSuccess={handleDisputeSuccess}
       />
     </main>
   )

@@ -11,10 +11,10 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { LogOut, User } from 'lucide-react'
+import { LogOut, User, Zap } from 'lucide-react'
 
 export function UserNav() {
-  const { user, signOut } = useAppStore()
+  const { user, signOut, credits, isLoadingCredits } = useAppStore()
   const router = useRouter()
 
   const handleSignOut = async () => {
@@ -37,6 +37,14 @@ export function UserNav() {
 
   const displayName = user.user_metadata?.full_name || user.email
   const initials = getInitials(displayName)
+
+  // Determinar color de créditos
+  const getCreditColor = () => {
+    if (credits === 0) return 'text-gray-600'
+    if (credits < 5) return 'text-red-600'
+    if (credits < 10) return 'text-yellow-600'
+    return 'text-green-600'
+  }
 
   return (
     <DropdownMenu>
@@ -66,6 +74,22 @@ export function UserNav() {
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
+        <DropdownMenuItem
+          className="cursor-pointer"
+          onClick={() => router.push('/credits')}
+        >
+          <Zap className={`mr-2 h-4 w-4 ${getCreditColor()}`} fill="currentColor" />
+          <span className="flex items-center gap-2">
+            Créditos
+            {isLoadingCredits ? (
+              <span className="text-xs text-muted-foreground">...</span>
+            ) : (
+              <span className={`text-xs font-semibold ${getCreditColor()}`}>
+                {credits}
+              </span>
+            )}
+          </span>
+        </DropdownMenuItem>
         <DropdownMenuItem
           className="cursor-pointer"
           onClick={() => router.push('/profile')}

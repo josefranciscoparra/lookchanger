@@ -39,16 +39,40 @@ export interface Garment {
   created_at?: string
 }
 
+export interface CreditTransaction {
+  id: string
+  user_id: string
+  amount: number
+  type: 'purchase' | 'consumption' | 'refund' | 'admin_adjustment'
+  reference_id?: string
+  description: string
+  metadata?: any
+  created_at: string
+}
+
+export interface UserCredits {
+  credits: number
+  total_spent: number
+  total_purchased: number
+  updated_at: string
+}
+
 interface AppState {
   // Estados de autenticación
   user: User | null
   isAuthLoading: boolean
-  
+
   // Estados
   models: Model[]
   garments: Garment[]
   isLoading: boolean
   isInitialized: boolean
+
+  // Estados de créditos
+  credits: number
+  creditBalance: UserCredits | null
+  creditTransactions: CreditTransaction[]
+  isLoadingCredits: boolean
   
   // Acciones para modelos
   setModels: (models: Model[]) => void
@@ -70,7 +94,13 @@ interface AppState {
   setUser: (user: User | null) => void
   signOut: () => Promise<void>
   initializeAuth: () => Promise<void>
-  
+
+  // Acciones de créditos
+  loadCredits: () => Promise<void>
+  loadCreditTransactions: (limit?: number) => Promise<void>
+  updateCredits: (amount: number) => void
+  refreshCredits: () => Promise<void>
+
   // Acciones generales
   initialize: () => Promise<void>
   setLoading: (loading: boolean) => void
@@ -84,6 +114,12 @@ export const useAppStore = create<AppState>()((set, get) => ({
   garments: [],
   isLoading: false,
   isInitialized: false,
+
+  // Estado inicial de créditos
+  credits: 0,
+  creditBalance: null,
+  creditTransactions: [],
+  isLoadingCredits: false,
 
   // Acciones para modelos
   setModels: (models) => set({ models }),
@@ -255,7 +291,15 @@ export const useAppStore = create<AppState>()((set, get) => ({
   signOut: async () => {
     const supabase = createClient()
     await supabase.auth.signOut()
-    set({ user: null, models: [], garments: [], isInitialized: false })
+    set({
+      user: null,
+      models: [],
+      garments: [],
+      isInitialized: false,
+      credits: 0,
+      creditBalance: null,
+      creditTransactions: []
+    })
   },
 
   initializeAuth: async () => {
@@ -292,6 +336,64 @@ export const useAppStore = create<AppState>()((set, get) => ({
     }
   },
 
+  // Acciones de créditos
+  loadCredits: async () => {
+    const { user } = get()
+    if (!user) return
+
+    try {
+      set({ isLoadingCredits: true })
+      const response = await fetch('/api/credits/balance')
+      const data = await response.json()
+
+      if (response.ok && data.success) {
+        set({
+          credits: data.credits,
+          creditBalance: {
+            credits: data.credits,
+            total_spent: data.total_spent,
+            total_purchased: data.total_purchased,
+            updated_at: data.updated_at
+          }
+        })
+      }
+    } catch (error) {
+      console.error('Error loading credits:', error)
+    } finally {
+      set({ isLoadingCredits: false })
+    }
+  },
+
+  loadCreditTransactions: async (limit = 50) => {
+    const { user } = get()
+    if (!user) return
+
+    try {
+      const response = await fetch(`/api/credits/transactions?limit=${limit}`)
+      const data = await response.json()
+
+      if (response.ok && data.success) {
+        set({ creditTransactions: data.transactions })
+      }
+    } catch (error) {
+      console.error('Error loading credit transactions:', error)
+    }
+  },
+
+  updateCredits: (amount: number) => {
+    set((state) => ({
+      credits: state.credits + amount,
+      creditBalance: state.creditBalance ? {
+        ...state.creditBalance,
+        credits: state.creditBalance.credits + amount
+      } : null
+    }))
+  },
+
+  refreshCredits: async () => {
+    await get().loadCredits()
+  },
+
   // Acciones generales
   initialize: async () => {
     const { user } = get()
@@ -302,7 +404,8 @@ export const useAppStore = create<AppState>()((set, get) => ({
       // Si hay usuario, SIEMPRE sincronizar con Supabase
       await Promise.all([
         get().loadModelsFromApi(),
-        get().loadGarmentsFromApi()
+        get().loadGarmentsFromApi(),
+        get().loadCredits()
       ])
     } finally {
       set({ isLoading: false, isInitialized: true })

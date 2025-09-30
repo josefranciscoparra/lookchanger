@@ -16,24 +16,26 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Card, CardContent } from '@/components/ui/card'
 import { LoadingAnimation } from '@/components/ui/loading-animation'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
+import { CostEstimator } from '@/components/CostEstimator'
+import { InsufficientCreditsModal } from '@/components/InsufficientCreditsModal'
 import { Palette, Wand2, AlertTriangle, Star, Upload, Shirt } from 'lucide-react'
 
 const STEPS = ['Seleccionar Modelo','Elegir Prendas','Configurar Estilo','Generar Outfit','Ver Resultados']
 
 export default function CrearOutfitPage() {
-  const { models, garments, initialize, isLoading, isInitialized } = useAppStore()
+  const { models, garments, initialize, isLoading, isInitialized, credits, refreshCredits } = useAppStore()
   const [step, setStep] = useState(0)
   const [mode, setMode] = useState<'existente'|'generar'>('existente')
   const [selectedModel, setSelectedModel] = useState<string | null>(null)
   const [selectedGarments, setSelectedGarments] = useState<string[]>([])
-  
+
   // Preview states
   const [previewOpen, setPreviewOpen] = useState(false)
   const [previewUrl, setPreviewUrl] = useState('')
   const [previewTitle, setPreviewTitle] = useState('')
   const [previewSubtitle, setPreviewSubtitle] = useState('')
   const [previewShowDownload, setPreviewShowDownload] = useState(false)
-  
+
   // Style configuration states
   const [useAdvancedStyle, setUseAdvancedStyle] = useState(false)
   const [stylePreferences, setStylePreferences] = useState({
@@ -49,12 +51,20 @@ export default function CrearOutfitPage() {
     onlySelectedGarments: true,
     photoStyle: 'studio' as 'original' | 'studio' | 'outdoor' | 'casual' | 'professional'
   })
-  
+
   // Generation states
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [generationProgress, setGenerationProgress] = useState(0)
   const [outputs, setOutputs] = useState<string[]>([])
+
+  // Credits modal state
+  const [showInsufficientCreditsModal, setShowInsufficientCreditsModal] = useState(false)
+  const [insufficientCreditsData, setInsufficientCreditsData] = useState({
+    current: 0,
+    required: 0,
+    needed: 0
+  })
 
   useEffect(() => {
     initialize()
@@ -100,6 +110,47 @@ export default function CrearOutfitPage() {
     setPreviewOpen(true)
   }
   
+  const checkCreditsAndGenerate = async () => {
+    console.log('💳 Verificando créditos antes de generar...')
+
+    // Verificar que tenemos modelo y prendas
+    if (!selectedModel || selectedGarments.length === 0) {
+      console.error('❌ Validación fallida:', {
+        hasModel: !!selectedModel,
+        garmentsCount: selectedGarments.length
+      })
+      setError('Debes seleccionar un modelo y al menos una prenda')
+      return
+    }
+
+    try {
+      // **PRIMERO: Verificar créditos**
+      const estimateRes = await fetch('/api/credits/estimate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ variants: 1 })
+      })
+      const estimateData = await estimateRes.json()
+
+      if (!estimateData.has_sufficient_credits) {
+        console.warn('⚠️ Créditos insuficientes detectados ANTES de generar')
+        setInsufficientCreditsData({
+          current: estimateData.current_credits || 0,
+          required: estimateData.cost || 0,
+          needed: estimateData.credits_needed || 0
+        })
+        setShowInsufficientCreditsModal(true)
+        return // NO avanzar al paso de generación
+      }
+
+      console.log('✅ Créditos suficientes, iniciando generación')
+      generateOutfit()
+    } catch (err) {
+      console.error('❌ Error al verificar créditos:', err)
+      setError('Error al verificar créditos. Intenta de nuevo.')
+    }
+  }
+
   const generateOutfit = async () => {
     console.log('🎬 generateOutfit llamado - Estado actual:', {
       step,
@@ -108,16 +159,6 @@ export default function CrearOutfitPage() {
       modelsAvailable: models.length,
       garmentsAvailable: garments.length
     })
-
-    // Verificar que tenemos modelo y prendas
-    if (!selectedModel || selectedGarments.length === 0) {
-      console.error('❌ Validación fallida en generateOutfit:', {
-        hasModel: !!selectedModel,
-        garmentsCount: selectedGarments.length
-      })
-      setError('Debes seleccionar un modelo y al menos una prenda')
-      return
-    }
 
     console.log('✅ Validación exitosa, iniciando generación')
     setLoading(true)
@@ -160,19 +201,22 @@ export default function CrearOutfitPage() {
         })
       })
       const json = await res.json()
-      
+
       clearInterval(progressInterval)
       setGenerationProgress(100)
-      
+
       if (!res.ok) {
         throw new Error(json.error || 'Error al generar el outfit')
       }
-      
+
+      // **NUEVO: Refrescar créditos después de generar**
+      await refreshCredits()
+
       setTimeout(() => {
         setOutputs(json.outputs || [])
         setStep(4) // Go to results step
       }, 1000)
-      
+
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error desconocido')
       setStep(2) // Back to style step
@@ -294,7 +338,10 @@ export default function CrearOutfitPage() {
       {step === 2 && (
         <section className="space-y-6">
           <h2 className="text-lg font-semibold text-ink-500">Configurar Estilo</h2>
-          
+
+          {/* Aviso de créditos - ARRIBA DEL TODO */}
+          <CostEstimator variants={1} />
+
           <div className="flex items-center justify-between rounded-2xl border border-border bg-white px-5 py-4 shadow-card">
             <div className="space-y-1">
               <label className="text-sm font-semibold text-ink-500">Configuración avanzada de estilo</label>
@@ -464,7 +511,7 @@ export default function CrearOutfitPage() {
               </div>
             </div>
           </div>
-          
+
           <Card className="border-none bg-gradient-to-br from-surface via-white to-blush-50 shadow-card">
             <CardContent className="flex flex-col gap-4 px-6 py-5">
               <div className="flex items-start gap-3">
@@ -570,8 +617,8 @@ export default function CrearOutfitPage() {
                 return;
               }
               if (step===2) {
-                console.log('▶️  Ejecutando generateOutfit desde step 2')
-                generateOutfit();
+                console.log('▶️  Verificando créditos desde step 2')
+                checkCreditsAndGenerate();
                 return;
               }
               if (step===4) {
@@ -610,6 +657,15 @@ export default function CrearOutfitPage() {
         title={previewTitle}
         subtitle={previewSubtitle}
         showDownload={previewShowDownload}
+      />
+
+      {/* Insufficient Credits Modal */}
+      <InsufficientCreditsModal
+        isOpen={showInsufficientCreditsModal}
+        onClose={() => setShowInsufficientCreditsModal(false)}
+        currentCredits={insufficientCreditsData.current}
+        requiredCredits={insufficientCreditsData.required}
+        creditsNeeded={insufficientCreditsData.needed}
       />
     </main>
   )
