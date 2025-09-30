@@ -3,15 +3,15 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import Image from "next/image"
-import { 
-  Sparkles, 
-  Users, 
-  Shirt, 
-  Wand2, 
+import {
+  Sparkles,
+  Users,
+  Shirt,
+  Wand2,
   Home,
-  Settings,
   HelpCircle,
-  Image as ImageIcon
+  Image as ImageIcon,
+  User
 } from "lucide-react"
 
 import {
@@ -62,14 +62,14 @@ const menuItems = [
 
 const secondaryItems = [
   {
+    title: "Mi Perfil",
+    url: "/profile",
+    icon: User,
+  },
+  {
     title: "Ayuda",
     url: "/help",
     icon: HelpCircle,
-  },
-  {
-    title: "Configuración",
-    url: "/settings",
-    icon: Settings,
   },
 ]
 

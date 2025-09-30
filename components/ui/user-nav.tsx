@@ -11,7 +11,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { LogOut, Settings, User } from 'lucide-react'
+import { LogOut, User } from 'lucide-react'
 
 export function UserNav() {
   const { user, signOut } = useAppStore()
@@ -66,13 +66,12 @@ export function UserNav() {
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <DropdownMenuItem className="cursor-pointer">
+        <DropdownMenuItem
+          className="cursor-pointer"
+          onClick={() => router.push('/profile')}
+        >
           <User className="mr-2 h-4 w-4" />
           <span>Mi Perfil</span>
-        </DropdownMenuItem>
-        <DropdownMenuItem className="cursor-pointer">
-          <Settings className="mr-2 h-4 w-4" />
-          <span>Configuración</span>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem 
