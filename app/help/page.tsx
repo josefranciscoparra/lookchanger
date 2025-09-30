@@ -10,6 +10,7 @@ import {
 } from '@/components/ui/accordion'
 import { HelpCircle, Book, MessageCircle, Mail, Lightbulb } from 'lucide-react'
 import { Separator } from '@/components/ui/separator'
+import { ContactForm } from '@/components/ContactForm'
 
 export default function HelpPage() {
   return (
@@ -159,57 +160,36 @@ export default function HelpPage() {
 
         <TabsContent value="contact" className="mt-6">
           <div className="grid gap-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Soporte Técnico</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground mb-4">
-                  Si experimentas problemas técnicos o tienes dudas sobre el funcionamiento de la aplicación, no dudes en contactarnos.
-                </p>
-                <a
-                  href="mailto:soporte@lookah.com"
-                  className="inline-flex items-center gap-2 text-primary hover:underline font-medium"
-                >
-                  <Mail className="h-4 w-4" />
-                  soporte@lookah.com
-                </a>
-              </CardContent>
-            </Card>
+            <ContactForm />
 
             <Card>
               <CardHeader>
-                <CardTitle>Sugerencias y Feedback</CardTitle>
+                <CardTitle>Información de Contacto</CardTitle>
               </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground mb-4">
-                  Tu opinión es importante para nosotros. Envíanos tus sugerencias, ideas o comentarios para mejorar la experiencia.
-                </p>
-                <a
-                  href="mailto:feedback@lookah.com"
-                  className="inline-flex items-center gap-2 text-primary hover:underline font-medium"
-                >
-                  <MessageCircle className="h-4 w-4" />
-                  feedback@lookah.com
-                </a>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Colaboraciones</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground mb-4">
-                  ¿Interesado en colaborar o integrar nuestra tecnología? Contáctanos para conocer más sobre las oportunidades disponibles.
-                </p>
-                <a
-                  href="mailto:info@lookah.com"
-                  className="inline-flex items-center gap-2 text-primary hover:underline font-medium"
-                >
-                  <HelpCircle className="h-4 w-4" />
-                  info@lookah.com
-                </a>
+              <CardContent className="space-y-4">
+                <div>
+                  <h3 className="font-semibold mb-2">Soporte Técnico</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Si experimentas problemas técnicos o tienes dudas sobre el funcionamiento de la aplicación,
+                    utiliza el formulario anterior para contactarnos.
+                  </p>
+                </div>
+                <Separator />
+                <div>
+                  <h3 className="font-semibold mb-2">Tiempo de Respuesta</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Normalmente respondemos en un plazo de 24-48 horas hábiles. Para consultas urgentes,
+                    por favor indícalo en el asunto del mensaje.
+                  </p>
+                </div>
+                <Separator />
+                <div>
+                  <h3 className="font-semibold mb-2">Horario de Atención</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Lunes a Viernes: 9:00 - 18:00 (CET)<br />
+                    Sábados, Domingos y Festivos: Cerrado
+                  </p>
+                </div>
               </CardContent>
             </Card>
           </div>
