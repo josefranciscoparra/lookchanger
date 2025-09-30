@@ -18,6 +18,9 @@ type Output = {
   image_url: string
   meta?: any
   created_at: string
+  can_dispute?: boolean
+  days_since_creation?: number
+  dispute_window_remaining?: number
 }
 
 type OutfitJob = {
@@ -157,26 +160,6 @@ export default function GalleryPage() {
     await refreshCredits()
   }
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'disputed':
-        return (
-          <Badge className="bg-yellow-100 text-yellow-800 border-yellow-200" variant="outline">
-            <Clock className="h-3 w-3 mr-1" />
-            En revisión
-          </Badge>
-        )
-      case 'refunded':
-        return (
-          <Badge className="bg-green-100 text-green-800 border-green-200" variant="outline">
-            <CheckCircle className="h-3 w-3 mr-1" />
-            Reembolsado
-          </Badge>
-        )
-      default:
-        return null
-    }
-  }
 
   if (loading) {
     return (
@@ -292,12 +275,6 @@ export default function GalleryPage() {
                     />
                   </div>
 
-                  {/* Status badge si existe */}
-                  {output.status && output.status !== 'approved' && (
-                    <div className="absolute top-3 left-3">
-                      {getStatusBadge(output.status)}
-                    </div>
-                  )}
 
                   {/* Botón de reportar problema */}
                   {output.can_dispute && (

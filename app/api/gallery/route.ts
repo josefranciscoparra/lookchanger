@@ -29,9 +29,7 @@ export async function GET() {
         const createdAt = new Date(output.created_at)
         const now = new Date()
         const daysSinceCreation = Math.floor((now.getTime() - createdAt.getTime()) / (1000 * 60 * 60 * 24))
-        const canDispute = daysSinceCreation <= DISPUTE_WINDOW_DAYS &&
-                          output.status !== 'disputed' &&
-                          output.status !== 'refunded'
+        const canDispute = daysSinceCreation <= DISPUTE_WINDOW_DAYS
 
         return {
           ...output,
@@ -43,9 +41,7 @@ export async function GET() {
 
       return {
         ...group,
-        outputs: enrichedOutputs,
-        credits_charged: group.job.credits_charged || 0,
-        charge_status: group.job.charge_status || 'unknown'
+        outputs: enrichedOutputs
       }
     })
 

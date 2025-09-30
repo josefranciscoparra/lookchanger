@@ -68,20 +68,12 @@ export function ImagePreview({ isOpen, onClose, imageUrl, title, subtitle, showD
 
           <div className="px-6 pb-6">
             <div className="relative rounded-xl overflow-hidden bg-surface">
-              <img
-                src={imageUrl}
-                alt={title}
-                className="w-full max-h-[50vh] sm:max-h-[70vh] object-contain"
-              />
-            </div>
-
-            <div className="flex items-center justify-end mt-4">
               {showDownload && (
                 <Button
                   variant="accent"
                   onClick={handleDownload}
                   disabled={downloading}
-                  className="flex items-center gap-2"
+                  className="absolute top-4 right-4 z-10 flex items-center gap-2"
                 >
                   {downloading ? (
                     <>
@@ -91,11 +83,16 @@ export function ImagePreview({ isOpen, onClose, imageUrl, title, subtitle, showD
                   ) : (
                     <>
                       <Download className="h-4 w-4" />
-                      Descargar imagen
+                      Descargar
                     </>
                   )}
                 </Button>
               )}
+              <img
+                src={imageUrl}
+                alt={title}
+                className="w-full max-h-[50vh] sm:max-h-[70vh] object-contain"
+              />
             </div>
           </div>
         </DialogPrimitive.Content>
