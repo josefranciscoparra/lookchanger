@@ -15,12 +15,13 @@ import { Progress } from '@/components/ui/progress'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Card, CardContent } from '@/components/ui/card'
 import { LoadingAnimation } from '@/components/ui/loading-animation'
+import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { Palette, Wand2, AlertTriangle, Star, Upload, Shirt } from 'lucide-react'
 
 const STEPS = ['Seleccionar Modelo','Elegir Prendas','Configurar Estilo','Generar Outfit','Ver Resultados']
 
 export default function CrearOutfitPage() {
-  const { models, garments, initialize } = useAppStore()
+  const { models, garments, initialize, isLoading, isInitialized } = useAppStore()
   const [step, setStep] = useState(0)
   const [mode, setMode] = useState<'existente'|'generar'>('existente')
   const [selectedModel, setSelectedModel] = useState<string | null>(null)
@@ -58,6 +59,19 @@ export default function CrearOutfitPage() {
   useEffect(() => {
     initialize()
   }, [initialize])
+
+  // Mostrar spinner mientras carga por primera vez
+  if (!isInitialized && isLoading) {
+    return (
+      <main className="mx-auto max-w-6xl px-6 pb-28 pt-6">
+        <div className="mb-6">
+          <h1 className="text-3xl font-bold text-ink-500">Crear Outfit</h1>
+          <p className="mt-1 text-text-secondary">Asistente guiado con IA para construir looks modernos y minimalistas.</p>
+        </div>
+        <LoadingSpinner size="lg" text="Cargando tus modelos y prendas..." />
+      </main>
+    )
+  }
 
   function next() { setStep(s => Math.min(s + 1, STEPS.length - 1)) }
   function prev() { setStep(s => Math.max(s - 1, 0)) }

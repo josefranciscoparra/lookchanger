@@ -5,6 +5,7 @@ import { Shirt, Sparkles, X } from 'lucide-react'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { TooltipProvider } from '@/components/ui/tooltip'
+import { LoadingSpinner } from '@/components/ui/loading-spinner'
 
 // Importar los nuevos componentes
 import { UploadDialog } from '@/components/garments/upload-dialog'
@@ -16,9 +17,9 @@ import { Tag } from 'lucide-react'
 export default function GarmentsPage() {
   const [showUploadDialog, setShowUploadDialog] = useState(false)
   const [success, setSuccess] = useState<string>('')
-  
+
   // Usar Zustand store
-  const { garments, addGarments, initialize, getGarmentsByCategory } = useAppStore()
+  const { garments, addGarments, initialize, getGarmentsByCategory, isLoading, isInitialized } = useAppStore()
 
   // Obtener número de categorías activas para el badge
   const garmentsByCategory = getGarmentsByCategory()
@@ -42,6 +43,28 @@ export default function GarmentsPage() {
   const clearMessages = useCallback(() => {
     setSuccess('')
   }, [])
+
+  // Mostrar spinner mientras carga por primera vez
+  if (!isInitialized && isLoading) {
+    return (
+      <TooltipProvider>
+        <div className="space-y-8">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-ink-100 rounded-full">
+                <Shirt className="h-6 w-6 text-ink-500" />
+              </div>
+              <div>
+                <h1 className="text-3xl font-bold text-ink-500">Colección de Prendas</h1>
+                <p className="text-muted-foreground">Organiza tu armario virtual para crear looks únicos</p>
+              </div>
+            </div>
+          </div>
+          <LoadingSpinner size="lg" text="Cargando tu colección de prendas..." />
+        </div>
+      </TooltipProvider>
+    )
+  }
 
   return (
     <TooltipProvider>

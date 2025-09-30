@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
+import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { Image, Download, Calendar, Zap } from 'lucide-react'
 // import { toast } from 'sonner' // Toast no disponible
 
@@ -129,18 +130,8 @@ export default function GalleryPage() {
           <Image className="h-6 w-6" />
           <h1 className="text-3xl font-bold">Mis Imágenes Generadas</h1>
         </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {[...Array(6)].map((_, i) => (
-            <Card key={i} className="overflow-hidden">
-              <div className="aspect-square bg-muted animate-pulse" />
-              <CardContent className="p-4">
-                <div className="h-4 bg-muted animate-pulse rounded mb-2" />
-                <div className="h-3 bg-muted animate-pulse rounded w-3/4" />
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+
+        <LoadingSpinner size="lg" text="Cargando tus imágenes generadas..." />
       </div>
     )
   }
