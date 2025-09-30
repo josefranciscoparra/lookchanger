@@ -141,127 +141,117 @@ export default function GalleryPage() {
 
   if (loading) {
     return (
-      <div className="container mx-auto py-6">
-        <div className="flex items-center gap-2 mb-6">
-          <Image className="h-6 w-6" />
-          <h1 className="text-3xl font-bold">Mis Imágenes Generadas</h1>
+      <main className="mx-auto max-w-6xl px-6 pb-28 pt-6">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-ink-500">Galería</h1>
+          <p className="mt-1 text-text-secondary">Cargando tus outfits generados...</p>
         </div>
-
-        <LoadingSpinner size="lg" text="Cargando tus imágenes generadas..." />
-      </div>
+        <LoadingSpinner size="lg" text="Cargando galería..." />
+      </main>
     )
   }
 
   if (generatedImages.length === 0) {
     return (
-      <div className="container mx-auto py-6">
-        <div className="flex items-center gap-2 mb-6">
-          <Image className="h-6 w-6" />
-          <h1 className="text-3xl font-bold">Mis Imágenes Generadas</h1>
+      <main className="mx-auto max-w-6xl px-6 pb-28 pt-6">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-ink-500">Galería</h1>
+          <p className="mt-1 text-text-secondary">Tus outfits generados aparecerán aquí</p>
         </div>
-        
-        <Card className="text-center py-12">
-          <CardContent>
-            <Image className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
-            <h3 className="text-xl font-semibold mb-2">
-              No hay imágenes generadas aún
-            </h3>
-            <p className="text-muted-foreground mb-6">
-              Crea tu primer outfit para ver las imágenes generadas aquí.
-            </p>
-            <Button asChild>
-              <a href="/outfits">
-                <Zap className="h-4 w-4 mr-2" />
-                Crear Outfit
-              </a>
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
+
+        <div className="rounded-2xl border border-dashed border-border bg-white p-12 text-center shadow-card">
+          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-surface">
+            <Image className="h-8 w-8 text-ink-500" />
+          </div>
+          <h3 className="mb-2 text-lg font-semibold text-ink-500">
+            Aún no has generado ningún outfit
+          </h3>
+          <p className="mb-6 text-sm text-text-secondary">
+            Crea tu primer outfit para empezar a construir tu galería.
+          </p>
+          <Button variant="accent" asChild>
+            <a href="/outfits">
+              <Zap className="h-4 w-4 mr-2" />
+              Crear outfit
+            </a>
+          </Button>
+        </div>
+      </main>
     )
   }
 
   return (
-    <div className="container mx-auto py-6">
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-2">
-          <Image className="h-6 w-6" />
-          <h1 className="text-3xl font-bold">Mis Imágenes Generadas</h1>
-        </div>
-        <Badge variant="secondary">
-          {generatedImages.reduce((total, group) => total + group.outputs.length, 0)} imágenes
-        </Badge>
+    <main className="mx-auto max-w-6xl px-6 pb-28 pt-6">
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-ink-500">Galería</h1>
+        <p className="mt-1 text-text-secondary">
+          {generatedImages.reduce((total, group) => total + group.outputs.length, 0)} {generatedImages.reduce((total, group) => total + group.outputs.length, 0) === 1 ? 'outfit generado' : 'outfits generados'}
+        </p>
       </div>
 
-      <div className="space-y-8">
+      <div className="space-y-10">
         {generatedImages.map((imageGroup, groupIndex) => (
-          <Card key={imageGroup.job.id} className="overflow-hidden">
-            <CardHeader className="bg-muted/50">
-              <div className="flex items-center justify-between gap-4">
-                <div className="flex flex-col gap-2 flex-1">
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Calendar className="h-4 w-4" />
-                    <span>{formatDate(imageGroup.job.created_at)}</span>
-                  </div>
+          <div key={imageGroup.job.id} className="space-y-3">
+            {/* Header con fecha y badges */}
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex items-center gap-3 text-sm text-text-secondary">
+                <Calendar className="h-4 w-4" />
+                <span>{formatDate(imageGroup.job.created_at)}</span>
+                {imageGroup.job.style_json && (
+                  <>
+                    {Object.entries(imageGroup.job.style_json).slice(0, 2).map(([key, value]) => (
+                      <Badge key={key} variant="secondary" className="text-xs">
+                        {String(value)}
+                      </Badge>
+                    ))}
+                  </>
+                )}
+              </div>
 
-                  {imageGroup.job.style_json && (
-                    <div className="flex flex-wrap gap-2">
-                      {Object.entries(imageGroup.job.style_json).map(([key, value]) => (
-                        <Badge key={key} variant="secondary" className="text-xs">
-                          {key}: {String(value)}
-                        </Badge>
-                      ))}
-                    </div>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => downloadAllImages(imageGroup.outputs, groupIndex)}
+                className="h-8 w-8 p-0"
+                title="Descargar todas las imágenes"
+              >
+                <Download className="h-4 w-4" />
+              </Button>
+            </div>
+
+            {/* Grid de imágenes */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {imageGroup.outputs.map((output, outputIndex) => (
+                <div
+                  key={output.id}
+                  className="group relative aspect-square overflow-hidden rounded-2xl border border-border bg-white shadow-card transition-all duration-300 hover:-translate-y-1 hover:shadow-lg cursor-pointer"
+                  onClick={() => openPreview(
+                    output.image_url,
+                    'Outfit generado',
+                    formatDate(imageGroup.job.created_at),
+                    true
                   )}
-                </div>
-
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => downloadAllImages(imageGroup.outputs, groupIndex)}
-                  className="h-8 w-8 p-0 flex-shrink-0"
-                  title={`Descargar todas las imágenes (${imageGroup.outputs.length})`}
                 >
-                  <Download className="h-4 w-4" />
-                </Button>
-              </div>
-            </CardHeader>
-            
-            <CardContent className="p-6">
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                {imageGroup.outputs.map((output, outputIndex) => (
-                  <div key={output.id} className="group relative">
-                    <div
-                      className="aspect-square overflow-hidden rounded-lg border bg-muted cursor-pointer"
-                      onClick={() => openPreview(
-                        output.image_url,
-                        'Outfit Generado',
-                        formatDate(imageGroup.job.created_at),
-                        true
-                      )}
-                    >
-                      <img
-                        src={output.image_url}
-                        alt={`Outfit generado ${outputIndex + 1}`}
-                        className="h-full w-full object-cover transition-transform group-hover:scale-105"
-                        onError={(e) => {
-                          const img = e.target as HTMLImageElement
-                          img.src = 'data:image/svg+xml;base64,' + btoa(`
-                            <svg width="300" height="300" xmlns="http://www.w3.org/2000/svg">
-                              <rect width="100%" height="100%" fill="#f3f4f6"/>
-                              <text x="50%" y="50%" text-anchor="middle" dy=".3em" fill="#9ca3af">
-                                Error cargando imagen
-                              </text>
-                            </svg>
-                          `)
-                        }}
-                      />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+                  <img
+                    src={output.image_url}
+                    alt={`Outfit generado ${outputIndex + 1}`}
+                    className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    onError={(e) => {
+                      const img = e.target as HTMLImageElement
+                      img.src = 'data:image/svg+xml;base64,' + btoa(`
+                        <svg width="300" height="300" xmlns="http://www.w3.org/2000/svg">
+                          <rect width="100%" height="100%" fill="#f3f4f6"/>
+                          <text x="50%" y="50%" text-anchor="middle" dy=".3em" fill="#9ca3af">
+                            Error cargando imagen
+                          </text>
+                        </svg>
+                      `)
+                    }}
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
         ))}
       </div>
 
@@ -274,6 +264,6 @@ export default function GalleryPage() {
         subtitle={previewSubtitle}
         showDownload={previewShowDownload}
       />
-    </div>
+    </main>
   )
 }

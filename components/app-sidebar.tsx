@@ -85,13 +85,13 @@ export function AppSidebar() {
   }
 
   return (
-    <Sidebar collapsible="icon">
+    <Sidebar collapsible="icon" className="flex flex-col">
       <SidebarHeader>
         <div className="flex items-center justify-center px-4 py-4">
           <Link href="/" className="flex items-center justify-center cursor-pointer" onClick={handleLinkClick}>
-            <Image 
-              src="/logotransparente.png" 
-              alt="Lookah Logo" 
+            <Image
+              src="/logotransparente.png"
+              alt="Lookah Logo"
               width={160}
               height={80}
               className="object-contain"
@@ -99,41 +99,17 @@ export function AppSidebar() {
             />
           </Link>
         </div>
+        <Separator className="mx-2" />
       </SidebarHeader>
 
-      <SidebarContent className="-mt-4">
+      <SidebarContent className="flex-1 overflow-visible">
         <SidebarGroup>
-          <SidebarGroupLabel>Aplicación</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {menuItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton 
-                    asChild 
-                    isActive={pathname === item.url}
-                    tooltip={item.title}
-                  >
-                    <Link href={item.url} onClick={handleLinkClick}>
-                      <item.icon />
-                      <span>{item.title}</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-
-        <Separator className="mx-2" />
-
-        <SidebarGroup>
-          <SidebarGroupLabel>Herramientas</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {secondaryItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton 
-                    asChild 
+                  <SidebarMenuButton
+                    asChild
                     isActive={pathname === item.url}
                     tooltip={item.title}
                   >
@@ -150,6 +126,27 @@ export function AppSidebar() {
       </SidebarContent>
 
       <SidebarFooter>
+        <SidebarGroup>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {secondaryItems.map((item) => (
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton
+                    asChild
+                    isActive={pathname === item.url}
+                    tooltip={item.title}
+                  >
+                    <Link href={item.url} onClick={handleLinkClick}>
+                      <item.icon />
+                      <span>{item.title}</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+        <Separator className="mx-2" />
         <div className="p-2 space-y-2">
           <UserNav />
           <Separator />
