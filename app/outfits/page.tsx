@@ -91,8 +91,14 @@ export default function CrearOutfitPage() {
     )
   }
 
-  function next() { setStep(s => Math.min(s + 1, STEPS.length - 1)) }
-  function prev() { setStep(s => Math.max(s - 1, 0)) }
+  function next() {
+    setStep(s => Math.min(s + 1, STEPS.length - 1))
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+  function prev() {
+    setStep(s => Math.max(s - 1, 0))
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
   
   const toggleGarmentSelection = (garmentUrl: string) => {
     setSelectedGarments(prev => 
