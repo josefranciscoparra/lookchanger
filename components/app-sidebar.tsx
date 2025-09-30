@@ -11,7 +11,8 @@ import {
   Home,
   HelpCircle,
   Image as ImageIcon,
-  User
+  User,
+  Mail
 } from "lucide-react"
 
 import {
@@ -62,9 +63,9 @@ const menuItems = [
 
 const secondaryItems = [
   {
-    title: "Mi Perfil",
-    url: "/profile",
-    icon: User,
+    title: "Contacto",
+    url: "/contact",
+    icon: Mail,
   },
   {
     title: "Ayuda",

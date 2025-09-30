@@ -8,9 +8,8 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion'
-import { HelpCircle, Book, MessageCircle, Mail, Lightbulb } from 'lucide-react'
+import { HelpCircle, Book, MessageCircle, Lightbulb } from 'lucide-react'
 import { Separator } from '@/components/ui/separator'
-import { ContactForm } from '@/components/ContactForm'
 
 export default function HelpPage() {
   return (
@@ -21,7 +20,7 @@ export default function HelpPage() {
       </div>
 
       <Tabs defaultValue="guide" className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="guide">
             <Book className="h-4 w-4 mr-2" />
             Guía
@@ -29,10 +28,6 @@ export default function HelpPage() {
           <TabsTrigger value="faq">
             <MessageCircle className="h-4 w-4 mr-2" />
             FAQ
-          </TabsTrigger>
-          <TabsTrigger value="contact">
-            <Mail className="h-4 w-4 mr-2" />
-            Contacto
           </TabsTrigger>
           <TabsTrigger value="resources">
             <Lightbulb className="h-4 w-4 mr-2" />
@@ -156,43 +151,6 @@ export default function HelpPage() {
               </Accordion>
             </CardContent>
           </Card>
-        </TabsContent>
-
-        <TabsContent value="contact" className="mt-6">
-          <div className="grid gap-6">
-            <ContactForm />
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Información de Contacto</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <h3 className="font-semibold mb-2">Soporte Técnico</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Si experimentas problemas técnicos o tienes dudas sobre el funcionamiento de la aplicación,
-                    utiliza el formulario anterior para contactarnos.
-                  </p>
-                </div>
-                <Separator />
-                <div>
-                  <h3 className="font-semibold mb-2">Tiempo de Respuesta</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Normalmente respondemos en un plazo de 24-48 horas hábiles. Para consultas urgentes,
-                    por favor indícalo en el asunto del mensaje.
-                  </p>
-                </div>
-                <Separator />
-                <div>
-                  <h3 className="font-semibold mb-2">Horario de Atención</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Lunes a Viernes: 9:00 - 18:00 (CET)<br />
-                    Sábados, Domingos y Festivos: Cerrado
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
         </TabsContent>
 
         <TabsContent value="resources" className="mt-6">

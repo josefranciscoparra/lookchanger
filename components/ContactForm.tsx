@@ -150,7 +150,7 @@ export function ContactForm() {
                 required
                 disabled={loading}
                 minLength={10}
-                rows={6}
+                rows={9}
                 className="resize-none"
               />
             </div>
