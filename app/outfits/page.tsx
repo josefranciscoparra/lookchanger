@@ -205,7 +205,7 @@ export default function CrearOutfitPage() {
             <div className="rounded-2xl border border-border bg-white p-6">
               <h3 className="font-semibold text-ink-500 mb-2">Generar modelo con IA</h3>
               <p className="text-sm text-text-secondary mb-4">Sube 3–5 fotos con fondo neutro y diferentes poses.</p>
-              <Button variant="accent" onClick={()=>window.location.assign('/models')}>Generar modelo</Button>
+              <Button variant="accent" disabled>Próximamente</Button>
             </div>
           )}
         </section>
