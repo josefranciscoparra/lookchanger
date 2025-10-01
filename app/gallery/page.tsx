@@ -9,8 +9,7 @@ import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { ImagePreview } from '@/components/ui/ImagePreview'
 import { DisputeModal } from '@/components/DisputeModal'
 import { useAppStore } from '@/lib/store'
-import { Image, Download, Calendar, Zap, AlertCircle, CheckCircle, Clock } from 'lucide-react'
-// import { toast } from 'sonner' // Toast no disponible
+import { Image, Download, Calendar, Zap, AlertCircle, ChevronLeft, ChevronRight } from 'lucide-react'
 
 type Output = {
   id: string
@@ -39,9 +38,20 @@ type GeneratedImageGroup = {
   outputs: Output[]
 }
 
+type PaginationInfo = {
+  total: number
+  currentPage: number
+  totalPages: number
+}
+
 export default function GalleryPage() {
   const [generatedImages, setGeneratedImages] = useState<GeneratedImageGroup[]>([])
   const [loading, setLoading] = useState(true)
+  const [pagination, setPagination] = useState<PaginationInfo>({
+    total: 0,
+    currentPage: 1,
+    totalPages: 0
+  })
   const { refreshCredits } = useAppStore()
 
   // Preview states
@@ -56,17 +66,22 @@ export default function GalleryPage() {
   const [selectedOutputId, setSelectedOutputId] = useState<string>('')
 
   useEffect(() => {
-    loadGeneratedImages()
+    loadGeneratedImages(1)
   }, [])
 
-  const loadGeneratedImages = async () => {
+  const loadGeneratedImages = async (page: number) => {
     try {
       setLoading(true)
-      const response = await fetch('/api/gallery')
+      const response = await fetch(`/api/gallery?page=${page}&limit=6`)
       const data = await response.json()
-      
+
       if (data.success) {
         setGeneratedImages(data.images)
+        setPagination({
+          total: data.total,
+          currentPage: data.currentPage,
+          totalPages: data.totalPages
+        })
       } else {
         console.error('Error from API:', data.error)
       }
@@ -74,6 +89,13 @@ export default function GalleryPage() {
       console.error('Error loading generated images:', error)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const goToPage = (page: number) => {
+    if (page >= 1 && page <= pagination.totalPages) {
+      loadGeneratedImages(page)
+      window.scrollTo({ top: 0, behavior: 'smooth' })
     }
   }
 
@@ -156,10 +178,9 @@ export default function GalleryPage() {
 
   const handleDisputeSuccess = async () => {
     // Recargar galería y refrescar créditos
-    await loadGeneratedImages()
+    await loadGeneratedImages(pagination.currentPage)
     await refreshCredits()
   }
-
 
   if (loading) {
     return (
@@ -173,7 +194,7 @@ export default function GalleryPage() {
     )
   }
 
-  if (generatedImages.length === 0) {
+  if (generatedImages.length === 0 && pagination.total === 0) {
     return (
       <main className="mx-auto max-w-6xl px-6 pb-28 pt-6">
         <div className="mb-8">
@@ -207,49 +228,55 @@ export default function GalleryPage() {
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-ink-500">Galería</h1>
         <p className="mt-1 text-text-secondary">
-          {generatedImages.reduce((total, group) => total + group.outputs.length, 0)} {generatedImages.reduce((total, group) => total + group.outputs.length, 0) === 1 ? 'outfit generado' : 'outfits generados'}
+          {pagination.total} {pagination.total === 1 ? 'generación' : 'generaciones'} • Página {pagination.currentPage} de {pagination.totalPages}
         </p>
       </div>
 
-      <div className="space-y-10">
+      {/* Grid de generaciones - 3 por fila */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {generatedImages.map((imageGroup, groupIndex) => (
-          <div key={imageGroup.job.id} className="space-y-3">
-            {/* Header con fecha y badges */}
-            <div className="flex items-center justify-between gap-4">
-              <div className="flex items-center gap-3 text-sm text-text-secondary">
-                <Calendar className="h-4 w-4" />
-                <span>{formatDate(imageGroup.job.created_at)}</span>
-                {imageGroup.job.style_json && (
-                  <>
-                    {Object.entries(imageGroup.job.style_json).slice(0, 2).map(([key, value]) => (
-                      <Badge key={key} variant="secondary" className="text-xs">
-                        {String(value)}
-                      </Badge>
-                    ))}
-                  </>
-                )}
+          <div
+            key={imageGroup.job.id}
+            className="rounded-2xl border border-border bg-white p-4 shadow-card space-y-3"
+          >
+            {/* Header con fecha, badges y botón descarga */}
+            <div className="flex flex-col gap-2 pb-2 border-b border-border">
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2 text-xs text-text-secondary">
+                  <Calendar className="h-3.5 w-3.5" />
+                  <span>{formatDate(imageGroup.job.created_at)}</span>
+                </div>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => downloadAllImages(imageGroup.outputs, groupIndex)}
+                  className="h-6 px-2 text-xs"
+                  title="Descargar todas"
+                >
+                  <Download className="h-3.5 w-3.5" />
+                </Button>
               </div>
 
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => downloadAllImages(imageGroup.outputs, groupIndex)}
-                className="h-8 w-8 p-0"
-                title="Descargar todas las imágenes"
-              >
-                <Download className="h-4 w-4" />
-              </Button>
+              {imageGroup.job.style_json && (
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  {Object.entries(imageGroup.job.style_json).slice(0, 2).map(([key, value]) => (
+                    <Badge key={key} variant="secondary" className="text-xs">
+                      {String(value)}
+                    </Badge>
+                  ))}
+                </div>
+              )}
             </div>
 
-            {/* Grid de imágenes */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {/* Grid de imágenes dentro de cada grupo */}
+            <div className="flex items-center justify-center gap-4 flex-wrap">
               {imageGroup.outputs.map((output, outputIndex) => (
                 <div
                   key={output.id}
-                  className="group relative aspect-square overflow-hidden rounded-2xl border border-border bg-white shadow-card transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
+                  className="group relative w-64 h-64 overflow-hidden rounded-xl border border-border bg-gray-50 shadow-sm transition-all duration-300 hover:shadow-md flex items-center justify-center"
                 >
                   <div
-                    className="cursor-pointer h-full w-full"
+                    className="cursor-pointer h-full w-full flex items-center justify-center"
                     onClick={() => openPreview(
                       output.image_url,
                       'Outfit generado',
@@ -260,7 +287,7 @@ export default function GalleryPage() {
                     <img
                       src={output.image_url}
                       alt={`Outfit generado ${outputIndex + 1}`}
-                      className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                      className="max-h-full max-w-full object-cover transition-transform duration-500 group-hover:scale-105"
                       onError={(e) => {
                         const img = e.target as HTMLImageElement
                         img.src = 'data:image/svg+xml;base64,' + btoa(`
@@ -275,21 +302,19 @@ export default function GalleryPage() {
                     />
                   </div>
 
-
                   {/* Botón de reportar problema */}
                   {output.can_dispute && (
-                    <div className="absolute bottom-3 right-3">
+                    <div className="absolute bottom-2 right-2">
                       <Button
                         size="sm"
                         variant="secondary"
-                        className="opacity-0 group-hover:opacity-100 transition-opacity bg-white/90 hover:bg-white shadow-md"
+                        className="opacity-0 group-hover:opacity-100 transition-opacity bg-white/90 hover:bg-white shadow-md h-7 px-2 text-xs"
                         onClick={(e) => {
                           e.stopPropagation()
                           openDisputeModal(output.id)
                         }}
                       >
-                        <AlertCircle className="h-4 w-4 mr-1" />
-                        Reportar
+                        <AlertCircle className="h-3.5 w-3.5" />
                       </Button>
                     </div>
                   )}
@@ -299,6 +324,61 @@ export default function GalleryPage() {
           </div>
         ))}
       </div>
+
+      {/* Controles de paginación */}
+      {pagination.totalPages > 1 && (
+        <div className="mt-12 flex items-center justify-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => goToPage(pagination.currentPage - 1)}
+            disabled={pagination.currentPage === 1}
+          >
+            <ChevronLeft className="h-4 w-4" />
+            Anterior
+          </Button>
+
+          <div className="flex items-center gap-1">
+            {Array.from({ length: pagination.totalPages }, (_, i) => i + 1).map((page) => {
+              // Mostrar solo páginas cercanas a la actual
+              const showPage =
+                page === 1 ||
+                page === pagination.totalPages ||
+                Math.abs(page - pagination.currentPage) <= 1
+
+              if (!showPage && page === 2 && pagination.currentPage > 3) {
+                return <span key={page} className="px-2 text-text-secondary">...</span>
+              }
+              if (!showPage && page === pagination.totalPages - 1 && pagination.currentPage < pagination.totalPages - 2) {
+                return <span key={page} className="px-2 text-text-secondary">...</span>
+              }
+              if (!showPage) return null
+
+              return (
+                <Button
+                  key={page}
+                  variant={page === pagination.currentPage ? 'default' : 'ghost'}
+                  size="sm"
+                  onClick={() => goToPage(page)}
+                  className="min-w-[40px]"
+                >
+                  {page}
+                </Button>
+              )
+            })}
+          </div>
+
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => goToPage(pagination.currentPage + 1)}
+            disabled={pagination.currentPage === pagination.totalPages}
+          >
+            Siguiente
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+        </div>
+      )}
 
       {/* Image Preview Modal */}
       <ImagePreview

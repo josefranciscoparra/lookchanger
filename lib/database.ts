@@ -102,53 +102,88 @@ export async function createOutput(
   }
 }
 
-export async function getUserGeneratedImages(
+export async function getUserGeneratedImagesCount(
   supabase: SupabaseClient,
   userId?: string
+): Promise<number> {
+  try {
+    let query = supabase
+      .from('outfit_jobs')
+      .select('*', { count: 'exact', head: true })
+      .eq('status', 'completed')
+
+    if (userId) {
+      query = query.eq('user_id', userId)
+    }
+
+    const { count, error } = await query
+
+    if (error) {
+      console.error('Error counting jobs:', error)
+      return 0
+    }
+
+    return count || 0
+  } catch (err) {
+    console.error('Error counting user generated images:', err)
+    return 0
+  }
+}
+
+export async function getUserGeneratedImages(
+  supabase: SupabaseClient,
+  userId?: string,
+  limit?: number,
+  offset?: number
 ): Promise<{ job: OutfitJob; outputs: Output[] }[]> {
   try {
-    const jobsQuery = supabase
+    let jobsQuery = supabase
       .from('outfit_jobs')
       .select('*')
       .eq('status', 'completed')
       .order('created_at', { ascending: false })
-    
+
     if (userId) {
-      jobsQuery.eq('user_id', userId)
+      jobsQuery = jobsQuery.eq('user_id', userId)
     }
-    
+
+    // Aplicar paginación si se especifica
+    if (limit !== undefined && offset !== undefined) {
+      jobsQuery = jobsQuery.range(offset, offset + limit - 1)
+    }
+
     const { data: jobs, error: jobsError } = await jobsQuery
-    
+
     if (jobsError) {
       console.error('Error fetching jobs:', jobsError)
       return []
     }
-    
+
     if (!jobs || jobs.length === 0) {
       return []
     }
-    
+
     // Obtener outputs para cada job
     const results: { job: OutfitJob; outputs: Output[] }[] = []
-    
+
     for (const job of jobs) {
       const { data: outputs, error: outputsError } = await supabase
         .from('outputs')
         .select('*')
         .eq('job_id', job.id)
         .order('created_at', { ascending: true })
-      
+
       if (outputsError) {
         console.error('Error fetching outputs for job:', job.id, outputsError)
         continue
       }
-      
+
       results.push({
         job: job as OutfitJob,
         outputs: outputs as Output[] || []
       })
     }
-    
+
     return results
   } catch (err) {
     console.error('Error fetching user generated images:', err)
