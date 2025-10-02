@@ -298,3 +298,121 @@ Style Preferences:
     return garmentUrls.slice(0, variants)
   }
 }
+
+/**
+ * Edita una imagen ya generada según instrucciones específicas del usuario
+ * El prompt se enfoca en preservar la imagen original y modificar solo lo solicitado
+ */
+export async function editGeneratedImage({
+  imageUrl,
+  editInstructions
+}: {
+  imageUrl: string,
+  editInstructions: string
+}): Promise<string | null> {
+  // Si no hay API_KEY, devolvemos null para indicar fallo
+  if (!OPENROUTER_API_KEY) {
+    console.warn('[editGeneratedImage] No API key available')
+    return null
+  }
+
+  const promptText = `⚠️ CRITICAL: IMAGE EDITING TASK - PRESERVE ORIGINAL IMAGE ⚠️
+
+This is an IMAGE EDITING task. You MUST keep the image EXACTLY as it is, making ONLY the specific changes requested below.
+
+🔴 ABSOLUTE REQUIREMENTS:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• PRESERVE 100% of the original image composition, lighting, pose, and background
+• Keep the person's face, body, and overall appearance IDENTICAL
+• ONLY modify what is explicitly requested in the instructions below
+• Maintain the same photographic style, quality, and resolution
+• DO NOT regenerate the image - EDIT the existing one
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📝 USER EDIT INSTRUCTIONS:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+${editInstructions}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✅ YOUR TASK:
+1. Analyze the image below carefully
+2. Apply ONLY the modifications described in the user instructions
+3. Keep everything else EXACTLY as it appears in the original
+4. Return ONE edited image that looks natural and seamless
+
+🚫 DO NOT:
+• Change the person's identity, face, or body unless explicitly requested
+• Modify the background, lighting, or composition unless specifically asked
+• Add or remove elements not mentioned in the instructions
+• Regenerate the image from scratch - this is an EDIT operation
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🔴 REMEMBER: This is a surgical edit. Change ONLY what was requested.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+IMAGE TO EDIT:`
+
+  const content: GeminiContent[] = [
+    {
+      type: "text",
+      text: promptText
+    },
+    {
+      type: "image_url",
+      image_url: {
+        url: imageUrl
+      }
+    }
+  ]
+
+  try {
+    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
+        "HTTP-Referer": "http://localhost:3001",
+        "X-Title": "AI Look Try-On - Image Edit",
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        model: "google/gemini-2.5-flash-image-preview",
+        messages: [
+          {
+            role: "user",
+            content: content
+          }
+        ]
+      })
+    })
+
+    if (!response.ok) {
+      throw new Error(`OpenRouter API error: ${response.status} ${response.statusText}`)
+    }
+
+    const result = await response.json()
+
+    console.log('OpenRouter edit response received')
+
+    // Procesar la respuesta - OpenRouter devuelve imágenes en el campo "images"
+    if (result.choices && result.choices[0]?.message) {
+      const message = result.choices[0].message
+
+      // Verificar si hay imágenes generadas
+      if (message.images && Array.isArray(message.images) && message.images.length > 0) {
+        const firstImage = message.images[0]
+        if (firstImage.type === 'image_url' && firstImage.image_url?.url) {
+          console.log('✅ Imagen editada generada exitosamente')
+          return firstImage.image_url.url
+        }
+      } else {
+        console.log('No images found in edit response')
+      }
+    }
+
+    return null
+
+  } catch (error) {
+    console.error('Error with OpenRouter API (edit):', error)
+    return null
+  }
+}

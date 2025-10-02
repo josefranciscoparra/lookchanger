@@ -9,6 +9,7 @@ import { GarmentCard } from '@/components/GarmentCard'
 import { EmptyState } from '@/components/EmptyState'
 import { StickyActions } from '@/components/ui/StickyActions'
 import { ImagePreview } from '@/components/ui/ImagePreview'
+import { EditImageModal } from '@/components/EditImageModal'
 import { Switch } from '@/components/ui/switch'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Progress } from '@/components/ui/progress'
@@ -18,7 +19,7 @@ import { LoadingAnimation } from '@/components/ui/loading-animation'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { CostEstimator } from '@/components/CostEstimator'
 import { InsufficientCreditsModal } from '@/components/InsufficientCreditsModal'
-import { Palette, Wand2, AlertTriangle, Star, Upload, Shirt } from 'lucide-react'
+import { Palette, Wand2, AlertTriangle, Star, Upload, Shirt, Pencil } from 'lucide-react'
 
 const STEPS = ['Seleccionar Modelo','Elegir Prendas','Configurar Estilo','Generar Outfit','Ver Resultados']
 
@@ -65,6 +66,10 @@ export default function CrearOutfitPage() {
     required: 0,
     needed: 0
   })
+
+  // Edit modal states
+  const [editModalOpen, setEditModalOpen] = useState(false)
+  const [editImageUrl, setEditImageUrl] = useState('')
 
   useEffect(() => {
     initialize()
@@ -114,6 +119,19 @@ export default function CrearOutfitPage() {
     setPreviewSubtitle(subtitle)
     setPreviewShowDownload(showDownload)
     setPreviewOpen(true)
+  }
+
+  const openEditModal = (imageUrl: string) => {
+    setEditImageUrl(imageUrl)
+    setEditModalOpen(true)
+  }
+
+  const handleEditSuccess = (editedImageUrl: string) => {
+    // Añadir la imagen editada a los outputs
+    setOutputs(prev => [editedImageUrl, ...prev])
+
+    // Mostrar preview de la imagen editada
+    openPreview(editedImageUrl, 'Imagen Editada', 'Tu edición ha sido aplicada exitosamente', true)
   }
   
   const checkCreditsAndGenerate = async () => {
@@ -565,7 +583,7 @@ export default function CrearOutfitPage() {
       {step === 4 && (
         <section className="space-y-6 pt-8 pb-20">
           {outputs.length > 0 ? (
-            <div className="flex justify-center">
+            <div className="flex flex-col items-center gap-4">
               <div
                 onClick={() => openPreview(outputs[0], 'Tu Outfit', `Estilo ${stylePreferences.style}`, true)}
                 className="group overflow-hidden rounded-2xl border border-border bg-white shadow-card transition-all duration-300 hover:-translate-y-1 hover:shadow-lg cursor-pointer max-w-md w-full"
@@ -578,6 +596,16 @@ export default function CrearOutfitPage() {
                   />
                 </div>
               </div>
+
+              {/* Botón de editar */}
+              <Button
+                variant="outline"
+                onClick={() => openEditModal(outputs[0])}
+                className="flex items-center gap-2"
+              >
+                <Pencil className="h-4 w-4" />
+                Editar esta imagen
+              </Button>
             </div>
           ) : (
             <div className="rounded-2xl border border-dashed border-border bg-white p-12 text-center shadow-card">
@@ -672,6 +700,14 @@ export default function CrearOutfitPage() {
         currentCredits={insufficientCreditsData.current}
         requiredCredits={insufficientCreditsData.required}
         creditsNeeded={insufficientCreditsData.needed}
+      />
+
+      {/* Edit Image Modal */}
+      <EditImageModal
+        isOpen={editModalOpen}
+        onClose={() => setEditModalOpen(false)}
+        imageUrl={editImageUrl}
+        onSuccess={handleEditSuccess}
       />
     </main>
   )

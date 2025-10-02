@@ -8,8 +8,9 @@ import { Separator } from '@/components/ui/separator'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { ImagePreview } from '@/components/ui/ImagePreview'
 import { DisputeModal } from '@/components/DisputeModal'
+import { EditImageModal } from '@/components/EditImageModal'
 import { useAppStore } from '@/lib/store'
-import { Image, Download, Calendar, Zap, AlertCircle, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Image, Download, Calendar, Zap, AlertCircle, ChevronLeft, ChevronRight, Pencil } from 'lucide-react'
 
 type Output = {
   id: string
@@ -64,6 +65,11 @@ export default function GalleryPage() {
   // Dispute modal states
   const [disputeModalOpen, setDisputeModalOpen] = useState(false)
   const [selectedOutputId, setSelectedOutputId] = useState<string>('')
+
+  // Edit modal states
+  const [editModalOpen, setEditModalOpen] = useState(false)
+  const [editImageUrl, setEditImageUrl] = useState('')
+  const [editOutputId, setEditOutputId] = useState<string>('')
 
   useEffect(() => {
     loadGeneratedImages(1)
@@ -180,6 +186,20 @@ export default function GalleryPage() {
     // Recargar galería y refrescar créditos
     await loadGeneratedImages(pagination.currentPage)
     await refreshCredits()
+  }
+
+  const openEditModal = (imageUrl: string, outputId: string) => {
+    setEditImageUrl(imageUrl)
+    setEditOutputId(outputId)
+    setEditModalOpen(true)
+  }
+
+  const handleEditSuccess = async (editedImageUrl: string) => {
+    // Recargar galería para mostrar la nueva imagen editada
+    await loadGeneratedImages(pagination.currentPage)
+
+    // Mostrar preview de la imagen editada
+    openPreview(editedImageUrl, 'Imagen Editada', 'Tu edición ha sido aplicada exitosamente', true)
   }
 
   if (loading) {
@@ -302,9 +322,24 @@ export default function GalleryPage() {
                     />
                   </div>
 
-                  {/* Botón de reportar problema */}
-                  {output.can_dispute && (
-                    <div className="absolute bottom-2 right-2">
+                  {/* Botones de acción */}
+                  <div className="absolute bottom-2 right-2 flex items-center gap-1.5">
+                    {/* Botón de editar */}
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      className="opacity-0 group-hover:opacity-100 transition-opacity bg-white/90 hover:bg-white shadow-md h-7 px-2 text-xs"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        openEditModal(output.image_url, output.id)
+                      }}
+                      title="Editar imagen"
+                    >
+                      <Pencil className="h-3.5 w-3.5" />
+                    </Button>
+
+                    {/* Botón de reportar problema */}
+                    {output.can_dispute && (
                       <Button
                         size="sm"
                         variant="secondary"
@@ -313,11 +348,12 @@ export default function GalleryPage() {
                           e.stopPropagation()
                           openDisputeModal(output.id)
                         }}
+                        title="Reportar problema"
                       >
                         <AlertCircle className="h-3.5 w-3.5" />
                       </Button>
-                    </div>
-                  )}
+                    )}
+                  </div>
                 </div>
               ))}
             </div>
@@ -396,6 +432,15 @@ export default function GalleryPage() {
         onClose={() => setDisputeModalOpen(false)}
         outputId={selectedOutputId}
         onSuccess={handleDisputeSuccess}
+      />
+
+      {/* Edit Image Modal */}
+      <EditImageModal
+        isOpen={editModalOpen}
+        onClose={() => setEditModalOpen(false)}
+        imageUrl={editImageUrl}
+        outputId={editOutputId}
+        onSuccess={handleEditSuccess}
       />
     </main>
   )
